@@ -1,3 +1,3 @@
-# Vendr Template Payment Provider
+# Vendr Reepay Payment Provider
 
-Template Payment Provider for Vendr, the eCommerce package for Umbrao v8+
+Reepay Payment Provider for Vendr, the eCommerce package for Umbrao v8+
