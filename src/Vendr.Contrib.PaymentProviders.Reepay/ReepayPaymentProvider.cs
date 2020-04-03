@@ -72,6 +72,9 @@ namespace Vendr.Contrib.PaymentProviders
                                         last_name = order.CustomerInfo.LastName
                                     }
                                 },
+                                locale = settings.Lang,
+                                settle = false,
+                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods) + "]" : null,
                                 accept_url = continueUrl,
                                 cancel_url = cancelUrl
                             })
