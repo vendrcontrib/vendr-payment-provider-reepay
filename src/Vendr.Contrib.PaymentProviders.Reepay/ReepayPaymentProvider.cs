@@ -74,7 +74,7 @@ namespace Vendr.Contrib.PaymentProviders
                                 },
                                 locale = settings.Lang,
                                 settle = false,
-                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods) + "]" : null,
+                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : null,
                                 accept_url = continueUrl,
                                 cancel_url = cancelUrl
                             })
