@@ -1,5 +1,6 @@
 ﻿using Flurl.Http;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Web;
@@ -43,6 +44,10 @@ namespace Vendr.Contrib.PaymentProviders
                    .Select(s => s.Trim())
                    .ToArray();
 
+            string paymentFormLink = string.Empty;
+
+            var chargeSessionId = order.Properties["reepayChargeSessionId"]?.Value;
+
             // https://docs.reepay.com/docs/new-web-shop
 
             try
@@ -54,11 +59,13 @@ namespace Vendr.Contrib.PaymentProviders
                             .WithHeader("Content-Type", "application/json")
                             .PostJsonAsync(new
                             {
-                                order = new {
+                                order = new
+                                {
                                     handle = order.OrderNumber,
                                     amount = orderAmount,
                                     currency = currencyCode,
-                                    customer = new {
+                                    customer = new
+                                    {
                                         email = order.CustomerInfo.Email,
                                         handle = order.CustomerInfo.CustomerReference,
                                         first_name = order.CustomerInfo.FirstName,
@@ -69,6 +76,11 @@ namespace Vendr.Contrib.PaymentProviders
                                 cancel_url = cancelUrl
                             })
                             .ReceiveJson().Result;
+
+                // Get charge session id
+                chargeSessionId = payment.id;
+
+                paymentFormLink = payment.url;
             }
             catch (Exception ex)
             {
@@ -77,7 +89,13 @@ namespace Vendr.Contrib.PaymentProviders
 
             return new PaymentFormResult()
             {
-                Form = new PaymentForm(continueUrl, FormMethod.Post)
+                MetaData = new Dictionary<string, string>
+                {
+                    { "reepayChargeSessionId", chargeSessionId }
+                },
+                Form = new PaymentForm(paymentFormLink, FormMethod.Get)
+                            .WithJsFile("https://checkout.reepay.com/checkout.js")
+                            .WithJs(@"var rp = new Reepay.WindowCheckout('" + chargeSessionId + "');")
             };
         }
 
