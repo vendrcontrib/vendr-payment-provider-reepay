@@ -19,6 +19,11 @@ namespace Vendr.Contrib.PaymentProviders
             SortOrder = 300)]
         public string ErrorUrl { get; set; }
 
+        [PaymentProviderSetting(Name = "Private Key",
+            Description = "Private Key from the Reepay administration portal.",
+            SortOrder = 500)]
+        public string PrivateKey { get; set; }
+
         [PaymentProviderSetting(Name = "Language",
             Description = "The language of the payment portal to display.",
             SortOrder = 900)]
