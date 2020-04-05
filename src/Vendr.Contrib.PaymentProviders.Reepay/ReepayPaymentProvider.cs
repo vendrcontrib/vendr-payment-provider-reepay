@@ -1,7 +1,9 @@
 ﻿using Flurl.Http;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -79,7 +81,7 @@ namespace Vendr.Contrib.PaymentProviders
                                 },
                                 locale = settings.Lang,
                                 settle = false,
-                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : "[]",
+                                //payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : "[]",
                                 accept_url = continueUrl,
                                 cancel_url = cancelUrl
                             })
@@ -137,6 +139,9 @@ namespace Vendr.Contrib.PaymentProviders
             {
                 // Process callback
 
+                var reepayEvent = GetWebhookReepayEvent(request);
+
+                // signature = hexencode(hmac_sha_256(webhook_secret, timestamp + id))
 
                 return new CallbackResult
                 {
@@ -303,6 +308,41 @@ namespace Vendr.Contrib.PaymentProviders
         protected string GetTransactionId(ReepayChargeDto payment)
         {
             return payment?.Transaction;
+        }
+
+        private ReepayWebhookEvent GetWebhookReepayEvent(HttpRequestBase request)
+        {
+            ReepayWebhookEvent reepayEvent = null;
+
+            if (HttpContext.Current.Items["Vendr_ReepayEvent"] != null)
+            {
+                reepayEvent = (ReepayWebhookEvent)HttpContext.Current.Items["Vendr_ReepayEvent"];
+            }
+            else
+            {
+                try
+                {
+                    if (request.InputStream.CanSeek)
+                        request.InputStream.Seek(0, SeekOrigin.Begin);
+
+                    using (var reader = new StreamReader(request.InputStream))
+                    {
+                        var json = reader.ReadToEnd();
+
+                        // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
+
+
+                        //reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetWebhookReepayEvent");
+                }
+            }
+
+            return reepayEvent;
         }
     }
 }
