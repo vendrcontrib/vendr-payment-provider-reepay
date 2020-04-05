@@ -104,12 +104,18 @@ namespace Vendr.Contrib.PaymentProviders
 
         public override string GetCancelUrl(OrderReadOnly order, ReepaySettings settings)
         {
-            return string.Empty;
+            settings.MustNotBeNull("settings");
+            settings.CancelUrl.MustNotBeNull("settings.CancelUrl");
+
+            return settings.CancelUrl;
         }
 
         public override string GetErrorUrl(OrderReadOnly order, ReepaySettings settings)
         {
-            return string.Empty;
+            settings.MustNotBeNull("settings");
+            settings.ErrorUrl.MustNotBeNull("settings.ErrorUrl");
+
+            return settings.ErrorUrl;
         }
 
         public override string GetContinueUrl(OrderReadOnly order, ReepaySettings settings)
