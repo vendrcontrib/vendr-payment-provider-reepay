@@ -27,6 +27,10 @@ namespace Vendr.Contrib.PaymentProviders
 
         public override bool FinalizeAtContinueUrl => true;
 
+        public override IEnumerable<TransactionMetaDataDefinition> TransactionMetaDataDefinitions => new[]{
+            new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
+        };
+
         public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepaySettings settings)
         {
             var currency = Vendr.Services.CurrencyService.GetCurrency(order.CurrencyId);
@@ -75,16 +79,16 @@ namespace Vendr.Contrib.PaymentProviders
                                 },
                                 locale = settings.Lang,
                                 settle = false,
-                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : null,
+                                payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : "[]",
                                 accept_url = continueUrl,
                                 cancel_url = cancelUrl
                             })
-                            .ReceiveJson().Result;
+                            .ReceiveJson<ReepayChargeSessionDto>().Result;
 
                 // Get charge session id
-                chargeSessionId = payment.id;
+                chargeSessionId = payment.Id;
 
-                paymentFormLink = payment.url;
+                paymentFormLink = payment.Url;
             }
             catch (Exception ex)
             {
@@ -218,21 +222,19 @@ namespace Vendr.Contrib.PaymentProviders
 
         public override ApiResult CapturePayment(OrderReadOnly order, ReepaySettings settings)
         {
-            // Create charge: https://reference.reepay.com/api/#create-charge
+            // Settle charge: https://reference.reepay.com/api/#settle-charge
 
             try
             {
                 var basicAuth = Base64Encode(settings.PrivateKey + ":");
                 var handle = order.OrderNumber;
 
-                var payment = $"https://api.reepay.com/v1/charge"
+                var payment = $"https://api.reepay.com/v1/charge/{handle}/settle"
                     .WithHeader("Authorization", "Basic " + basicAuth)
                     .WithHeader("Content-Type", "application/json")
                     .PostJsonAsync(new
                     {
-                        handle = handle,
-                        amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value),
-                        settle = true
+                        amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
                     })
                     .ReceiveJson<ReepayChargeDto>().Result;
             }
