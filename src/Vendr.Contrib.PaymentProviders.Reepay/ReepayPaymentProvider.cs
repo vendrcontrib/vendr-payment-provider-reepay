@@ -159,7 +159,7 @@ namespace Vendr.Contrib.PaymentProviders
                 Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - ProcessCallback");
             }
 
-            return CallbackResult.Empty;
+            return CallbackResult.BadRequest();
         }
 
         public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepaySettings settings)
