@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using Vendr.Contrib.PaymentProviders.Reepay;
@@ -38,7 +40,7 @@ namespace Vendr.Contrib.PaymentProviders
         {
             try
             {
-                var reepayEvent = GetWebhookReepayEvent(request);
+                var reepayEvent = GetWebhookReepayEvent(request, settings);
                 if (reepayEvent != null)
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.EventId))
@@ -90,7 +92,7 @@ namespace Vendr.Contrib.PaymentProviders
                             {
                                 order = new
                                 {
-                                    handle = order.OrderNumber,
+                                    handle = order.GenerateOrderReference(), //order.OrderNumber,
                                     amount = orderAmount,
                                     currency = currencyCode,
                                     customer = new
@@ -161,9 +163,7 @@ namespace Vendr.Contrib.PaymentProviders
             {
                 // Process callback
 
-                var reepayEvent = GetWebhookReepayEvent(request);
-
-                // signature = hexencode(hmac_sha_256(webhook_secret, timestamp + id))
+                var reepayEvent = GetWebhookReepayEvent(request, settings);
 
                 return new CallbackResult
                 {
@@ -332,7 +332,7 @@ namespace Vendr.Contrib.PaymentProviders
             return payment?.Transaction;
         }
 
-        private ReepayWebhookEvent GetWebhookReepayEvent(HttpRequestBase request)
+        private ReepayWebhookEvent GetWebhookReepayEvent(HttpRequestBase request, ReepaySettings settings)
         {
             ReepayWebhookEvent reepayEvent = null;
 
@@ -351,11 +351,14 @@ namespace Vendr.Contrib.PaymentProviders
                     {
                         var json = reader.ReadToEnd();
 
-                        // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
-
-
                         //reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
 
+                        // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
+                        //var signature = CalculateSignature(settings.WebhookSecret, timestamp + id);
+                        //if (signature != reepayEvent.Signature)
+                        //{
+
+                        //}
                     }
                 }
                 catch (Exception ex)
@@ -365,6 +368,30 @@ namespace Vendr.Contrib.PaymentProviders
             }
 
             return reepayEvent;
+        }
+
+        private string CalculateSignature(string webhookSecret, string timestamp, string id)
+        {
+            // signature = hexencode(hmac_sha_256(webhook_secret, timestamp + id))
+
+            var signature = ComputeSignature(webhookSecret, timestamp, id);
+
+            return signature;
+        }
+
+        private string ComputeSignature(string secret, string timestamp, string id)
+        {
+            using (var cryptographer = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(timestamp + id);
+                var hash = cryptographer.ComputeHash(buffer);
+                return HexEncode(hash).ToLowerInvariant();
+            }
+        }
+        
+        private string HexEncode(byte[] data)
+        {
+            return BitConverter.ToString(data).Replace("-", string.Empty);
         }
     }
 }
