@@ -10,6 +10,7 @@ using System.Web.Mvc;
 using Vendr.Contrib.PaymentProviders.Reepay;
 using Vendr.Core;
 using Vendr.Core.Models;
+using Vendr.Core.Web;
 using Vendr.Core.Web.Api;
 using Vendr.Core.Web.PaymentProviders;
 
@@ -32,6 +33,27 @@ namespace Vendr.Contrib.PaymentProviders
         public override IEnumerable<TransactionMetaDataDefinition> TransactionMetaDataDefinitions => new[]{
             new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
         };
+
+        public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
+        {
+            try
+            {
+                var reepayEvent = GetWebhookReepayEvent(request);
+                if (reepayEvent != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId))
+                    {
+                        return OrderReference.Parse(reepayEvent.EventId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
+            }
+
+            return base.GetOrderReference(request, settings);
+        }
 
         public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepaySettings settings)
         {
