@@ -91,6 +91,7 @@
     <Compile Include="Properties\VersionInfo.cs" />
     <Compile Include="ReepayChargeDto.cs" />
     <Compile Include="ReepayChargeSessionDto.cs" />
+    <Compile Include="ReepayEvent.cs" />
     <Compile Include="ReepayPaymentProvider.cs" />
     <Compile Include="ReepayRefundDto.cs" />
     <Compile Include="ReepaySettings.cs" />

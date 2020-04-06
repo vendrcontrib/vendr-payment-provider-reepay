@@ -7,45 +7,27 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
     /// Reepay webhook object: https://reference.reepay.com/api/#the-webhook-object
     /// </summary>
     [DataContract]
-    public class ReepayWebhookEvent
+    public class ReepayWebhookEvent : ReepayEvent
     {
-        [DataMember(Name = "id")]
-        public string Id { get; set; }
+        [DataMember(Name = "event_id")]
+        public string EventId { get; set; }
 
-        [DataMember(Name = "event")]
-        public string Event { get; set; }
+        [DataMember(Name = "timestamp")]
+        public DateTime Timestamp { get; set; }
 
-        [DataMember(Name = "state")]
-        public string State { get; set; }
+        [DataMember(Name = "signature")]
+        public string Signature { get; set; }
 
-        [DataMember(Name = "url")]
-        public string Url { get; set; }
+        [DataMember(Name = "payment_method")]
+        public string PaymentMethod { get; set; }
 
-        [DataMember(Name = "username")]
-        public string Username { get; set; }
+        [DataMember(Name = "transaction")]
+        public string Transaction { get; set; }
 
-        [DataMember(Name = "password")]
-        public string Password { get; set; }
+        [DataMember(Name = "credit_note")]
+        public string CreditNote { get; set; }
 
-        [DataMember(Name = "content")]
-        public string Content { get; set; }
-
-        [DataMember(Name = "created")]
-        public DateTime Created { get; set; }
-
-        [DataMember(Name = "count")]
-        public int Count { get; set; }
-
-        [DataMember(Name = "last_fail")]
-        public DateTime? LastFail { get; set; }
-
-        [DataMember(Name = "first_fail")]
-        public DateTime? FirstFail { get; set; }
-
-        [DataMember(Name = "alert_count")]
-        public int? AlertCount { get; set; }
-
-        [DataMember(Name = "alert_sent")]
-        public DateTime? AlertSent { get; set; }
+        [DataMember(Name = "credit")]
+        public string Credit { get; set; }
     }
 }
