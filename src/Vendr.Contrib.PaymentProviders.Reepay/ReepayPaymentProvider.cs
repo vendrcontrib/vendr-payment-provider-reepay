@@ -92,7 +92,7 @@ namespace Vendr.Contrib.PaymentProviders
                             {
                                 order = new
                                 {
-                                    handle = order.GenerateOrderReference(), //order.OrderNumber,
+                                    handle = order.OrderNumber,
                                     amount = orderAmount,
                                     currency = currencyCode,
                                     customer = new
