@@ -8,7 +8,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         [DataMember(Name = "handle")]
         public string Handle { get; set; }
 
-        [DataMember(Name = "key")]
+        [DataMember(Name = "key", EmitDefaultValue = false)]
         public string Key { get; set; }
 
         [DataMember(Name = "amount")]

@@ -1,4 +1,5 @@
 ﻿using Flurl.Http;
+using Flurl.Http.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -36,26 +37,26 @@ namespace Vendr.Contrib.PaymentProviders
             new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
         };
 
-        public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
-        {
-            try
-            {
-                var reepayEvent = GetWebhookReepayEvent(request, settings);
-                if (reepayEvent != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId))
-                    {
-                        return OrderReference.Parse(reepayEvent.EventId);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
-            }
+        //public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
+        //{
+        //    try
+        //    {
+        //        var reepayEvent = GetWebhookReepayEvent(request, settings);
+        //        if (reepayEvent != null)
+        //        {
+        //            if (!string.IsNullOrWhiteSpace(reepayEvent.EventId))
+        //            {
+        //                return OrderReference.Parse(reepayEvent.EventId);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
+        //    }
 
-            return base.GetOrderReference(request, settings);
-        }
+        //    return base.GetOrderReference(request, settings);
+        //}
 
         public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepaySettings settings)
         {
@@ -95,7 +96,8 @@ namespace Vendr.Contrib.PaymentProviders
                             Email = order.CustomerInfo.Email,
                             Handle = order.CustomerInfo.CustomerReference,
                             FirstName = order.CustomerInfo.FirstName,
-                            LastName = order.CustomerInfo.LastName
+                            LastName = order.CustomerInfo.LastName,
+                            GenerateHandle = string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
                         }
                     },
                     Locale = settings.Lang,
@@ -104,11 +106,20 @@ namespace Vendr.Contrib.PaymentProviders
                     CancelUrl = cancelUrl
                 };
 
-                if (paymentMethods?.Length > 0)
+                //if (paymentMethods?.Length > 0)
+                //{
+                //data.PaymentMethods = "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]";
+                //data.PaymentMethods = paymentMethods.Select(x => $"\"{x}\"").ToArray();
+                //}
+
+                FlurlHttp.Configure(x =>
                 {
-                    //data.PaymentMethods = "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]";
-                    data.PaymentMethods = paymentMethods.Select(x => $"\"{x}\"").ToArray();
-                }
+                    var jsonSettings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore
+                    };
+                    x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
+                });
 
                 var basicAuth = Base64Encode(settings.PrivateKey + ":");
 

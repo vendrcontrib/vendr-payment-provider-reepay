@@ -5,10 +5,10 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
     [DataContract]
     public class ReepaySessionChargeDto
     {
-        [DataMember(Name = "configuration")]
+        [DataMember(Name = "configuration", EmitDefaultValue = false)]
         public string Configuration { get; set; }
 
-        [DataMember(Name = "locale")]
+        [DataMember(Name = "locale", EmitDefaultValue = false)]
         public string Locale { get; set; }
 
         [DataMember(Name = "settle")]
@@ -26,7 +26,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         [DataMember(Name = "cancel_url")]
         public string CancelUrl { get; set; }
 
-        [DataMember(Name = "payment_methods")]
+        [DataMember(Name = "payment_methods", EmitDefaultValue = false)]
         public string[] PaymentMethods { get; set; }
     }
 }
