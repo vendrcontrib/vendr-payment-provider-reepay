@@ -108,33 +108,17 @@ namespace Vendr.Contrib.PaymentProviders
                     CancelUrl = cancelUrl
                 };
 
-                //if (paymentMethods?.Length > 0)
-                //{
-                //data.PaymentMethods = "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]";
-                //data.PaymentMethods = paymentMethods.Select(x => $"\"{x}\"").ToArray();
-                //}
-
-                //FlurlHttp.Configure(x =>
-                //{
-                //    var jsonSettings = new JsonSerializerSettings
-                //    {
-                //        NullValueHandling = NullValueHandling.Ignore
-                //    };
-                //    x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
-                //});
+                if (paymentMethods?.Length > 0)
+                {
+                    // Set payment methods if any exists otherwise omit.
+                    data.PaymentMethods = paymentMethods;
+                }
 
                 var clientConfig = GetReepayClientConfig(settings);
                 var client = new ReepayClient(clientConfig);
 
+                // Create session charge
                 var payment = client.CreateSessionCharge(data);
-
-                //var basicAuth = Base64Encode(settings.PrivateKey + ":");
-
-                //var payment = $"https://checkout-api.reepay.com/v1/session/charge"
-                //            .WithHeader("Authorization", "Basic " + basicAuth)
-                //            .WithHeader("Content-Type", "application/json")
-                //            .PostJsonAsync(data)
-                //            .ReceiveJson<ReepaySessionChargeResult>().Result;
 
                 // Get charge session id
                 chargeSessionId = payment.Id;
