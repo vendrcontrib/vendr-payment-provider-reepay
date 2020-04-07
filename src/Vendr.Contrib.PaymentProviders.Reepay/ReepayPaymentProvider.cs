@@ -175,16 +175,20 @@ namespace Vendr.Contrib.PaymentProviders
 
                 var reepayEvent = GetWebhookReepayEvent(request, settings);
 
-                return new CallbackResult
+                if (reepayEvent != null && !string.IsNullOrWhiteSpace(reepayEvent.EventId) &&
+                   (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
                 {
-                    TransactionInfo = new TransactionInfo
+                    return CallbackResult.Ok(new TransactionInfo
                     {
+                        TransactionId = reepayEvent.Transaction,
                         AmountAuthorized = order.TotalPrice.Value.WithTax,
-                        TransactionFee = 0m,
-                        TransactionId = Guid.NewGuid().ToString("N"),
-                        PaymentStatus = PaymentStatus.Authorized
-                    }
-                };
+                        PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
+                    });
+                    //, new Dictionary<string, string>
+                    //{
+                    //   { "reepayWebhookId", reepayEvent.Id }
+                    //});
+                }
             }
             catch (Exception ex)
             {
