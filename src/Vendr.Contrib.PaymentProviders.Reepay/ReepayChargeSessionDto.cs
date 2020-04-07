@@ -3,7 +3,7 @@
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
     [DataContract]
-    public class ReepayChargeSessionDto
+    public class ReepaySessionChargeResultDto
     {
         [DataMember(Name = "id")]
         public string Id { get; set; }

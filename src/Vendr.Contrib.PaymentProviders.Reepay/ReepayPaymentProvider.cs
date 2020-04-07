@@ -83,33 +83,40 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
+                var data = new ReepaySessionChargeDto
+                {
+                    Order = new ReepayOrderDto
+                    {
+                        Handle = order.OrderNumber,
+                        Amount = Convert.ToInt32(orderAmount),
+                        Currency = currencyCode,
+                        Customer = new ReepayCustomerDto
+                        {
+                            Email = order.CustomerInfo.Email,
+                            Handle = order.CustomerInfo.CustomerReference,
+                            FirstName = order.CustomerInfo.FirstName,
+                            LastName = order.CustomerInfo.LastName
+                        }
+                    },
+                    Locale = settings.Lang,
+                    Settle = false,
+                    AcceptUrl = continueUrl,
+                    CancelUrl = cancelUrl
+                };
+
+                if (paymentMethods?.Length > 0)
+                {
+                    //data.PaymentMethods = "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]";
+                    data.PaymentMethods = paymentMethods.Select(x => $"\"{x}\"").ToArray();
+                }
+
                 var basicAuth = Base64Encode(settings.PrivateKey + ":");
 
                 var payment = $"https://checkout-api.reepay.com/v1/session/charge"
                             .WithHeader("Authorization", "Basic " + basicAuth)
                             .WithHeader("Content-Type", "application/json")
-                            .PostJsonAsync(new
-                            {
-                                order = new
-                                {
-                                    handle = order.OrderNumber,
-                                    amount = orderAmount,
-                                    currency = currencyCode,
-                                    customer = new
-                                    {
-                                        email = order.CustomerInfo.Email,
-                                        handle = order.CustomerInfo.CustomerReference,
-                                        first_name = order.CustomerInfo.FirstName,
-                                        last_name = order.CustomerInfo.LastName
-                                    }
-                                },
-                                locale = settings.Lang,
-                                settle = false,
-                                //payment_methods = paymentMethods != null && paymentMethods.Length > 0 ? "[" + string.Join(",", paymentMethods.Select(x => $"\"{x}\"")) + "]" : "[]",
-                                accept_url = continueUrl,
-                                cancel_url = cancelUrl
-                            })
-                            .ReceiveJson<ReepayChargeSessionDto>().Result;
+                            .PostJsonAsync(data)
+                            .ReceiveJson<ReepaySessionChargeResultDto>().Result;
 
                 // Get charge session id
                 chargeSessionId = payment.Id;
