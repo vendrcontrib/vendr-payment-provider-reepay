@@ -38,7 +38,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                         {
                             var jsonSettings = new JsonSerializerSettings
                             {
-                                NullValueHandling = NullValueHandling.Ignore
+                                NullValueHandling = NullValueHandling.Ignore,
+                                DefaultValueHandling = DefaultValueHandling.Include,
+                                MissingMemberHandling = MissingMemberHandling.Ignore
                             };
                             x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
                         })
@@ -49,6 +51,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             }
             catch (FlurlHttpException ex)
             {
+                dynamic d = ex.GetResponseJsonAsync();
+
                 throw;
             }
 

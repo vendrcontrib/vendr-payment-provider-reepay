@@ -15,7 +15,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         public bool Settle { get; set; }
 
         [JsonProperty("order")]
-        public ReepayOrderDto Order { get; set; }
+        public ReepayOrder Order { get; set; }
 
         [JsonProperty("recurring")]
         public bool Recurring { get; set; }

@@ -2,13 +2,13 @@
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    public class ReepayOrderDto
+    public class ReepayOrder
     {
         [JsonProperty("handle")]
         public string Handle { get; set; }
 
-        [JsonProperty("key")]
-        public string Key { get; set; }
+        //[JsonProperty("key")]
+        //public string Key { get; set; }
 
         [JsonProperty("amount")]
         public int Amount { get; set; }
@@ -17,6 +17,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         public string Currency { get; set; }
 
         [JsonProperty("customer")]
-        public ReepayCustomerDto Customer { get; set; }
+        public ReepayCustomer Customer { get; set; }
     }
 }

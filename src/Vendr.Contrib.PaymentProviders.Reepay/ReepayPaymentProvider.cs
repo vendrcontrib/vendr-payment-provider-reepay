@@ -88,12 +88,12 @@ namespace Vendr.Contrib.PaymentProviders
             {
                 var data = new ReepaySessionCharge
                 {
-                    Order = new ReepayOrderDto
+                    Order = new ReepayOrder
                     {
                         Handle = order.OrderNumber,
                         Amount = Convert.ToInt32(orderAmount),
                         Currency = currencyCode,
-                        Customer = new ReepayCustomerDto
+                        Customer = new ReepayCustomer
                         {
                             Email = order.CustomerInfo.Email,
                             Handle = order.CustomerInfo.CustomerReference,
@@ -126,15 +126,15 @@ namespace Vendr.Contrib.PaymentProviders
                 var clientConfig = GetReepayClientConfig(settings);
                 var client = new ReepayClient(clientConfig);
 
-                client.CreateSessionCharge(data);
+                var payment = client.CreateSessionCharge(data);
 
-                var basicAuth = Base64Encode(settings.PrivateKey + ":");
+                //var basicAuth = Base64Encode(settings.PrivateKey + ":");
 
-                var payment = $"https://checkout-api.reepay.com/v1/session/charge"
-                            .WithHeader("Authorization", "Basic " + basicAuth)
-                            .WithHeader("Content-Type", "application/json")
-                            .PostJsonAsync(data)
-                            .ReceiveJson<ReepaySessionChargeResult>().Result;
+                //var payment = $"https://checkout-api.reepay.com/v1/session/charge"
+                //            .WithHeader("Authorization", "Basic " + basicAuth)
+                //            .WithHeader("Content-Type", "application/json")
+                //            .PostJsonAsync(data)
+                //            .ReceiveJson<ReepaySessionChargeResult>().Result;
 
                 // Get charge session id
                 chargeSessionId = payment.Id;
