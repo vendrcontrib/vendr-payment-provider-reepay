@@ -1,50 +1,49 @@
-﻿using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    [DataContract]
     public class ReepayCustomerDto
     {
-        [DataMember(Name = "email")]
+        [JsonProperty("email")]
         public string Email { get; set; }
 
-        [DataMember(Name = "first_name")]
+        [JsonProperty("first_name")]
         public string FirstName { get; set; }
 
-        [DataMember(Name = "last_name")]
+        [JsonProperty("last_name")]
         public string LastName { get; set; }
 
-        [DataMember(Name = "address", EmitDefaultValue = false)]
+        [JsonProperty("address")]
         public string Address { get; set; }
 
-        [DataMember(Name = "address2", EmitDefaultValue = false)]
+        [JsonProperty("address2")]
         public string Address2 { get; set; }
 
-        [DataMember(Name = "postal_code", EmitDefaultValue = false)]
+        [JsonProperty("postal_code")]
         public string PostalCode { get; set; }
 
-        [DataMember(Name = "city", EmitDefaultValue = false)]
+        [JsonProperty("city")]
         public string City { get; set; }
 
-        [DataMember(Name = "country", EmitDefaultValue = false)]
+        [JsonProperty("country")]
         public string Country { get; set; }
 
-        [DataMember(Name = "phone", EmitDefaultValue = false)]
+        [JsonProperty("phone")]
         public string Phone { get; set; }
 
-        [DataMember(Name = "company", EmitDefaultValue = false)]
+        [JsonProperty("company")]
         public string Company { get; set; }
 
-        [DataMember(Name = "vat", EmitDefaultValue = false)]
+        [JsonProperty("vat")]
         public string VAT { get; set; }
 
-        [DataMember(Name = "handle")]
+        [JsonProperty("handle")]
         public string Handle { get; set; }
 
-        [DataMember(Name = "handle")]
+        [JsonProperty("generate_handle")]
         public bool GenerateHandle { get; set; }
 
-        [DataMember(Name = "test")]
+        [JsonProperty("test")]
         public bool Test { get; set; }
     }
 }

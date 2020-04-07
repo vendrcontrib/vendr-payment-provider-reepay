@@ -11,6 +11,8 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using Vendr.Contrib.PaymentProviders.Reepay;
+using Vendr.Contrib.PaymentProviders.Reepay.Api;
+using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 using Vendr.Core;
 using Vendr.Core.Models;
 using Vendr.Core.Web;
@@ -84,7 +86,7 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var data = new ReepaySessionChargeDto
+                var data = new ReepaySessionCharge
                 {
                     Order = new ReepayOrderDto
                     {
@@ -112,14 +114,19 @@ namespace Vendr.Contrib.PaymentProviders
                 //data.PaymentMethods = paymentMethods.Select(x => $"\"{x}\"").ToArray();
                 //}
 
-                FlurlHttp.Configure(x =>
-                {
-                    var jsonSettings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    };
-                    x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
-                });
+                //FlurlHttp.Configure(x =>
+                //{
+                //    var jsonSettings = new JsonSerializerSettings
+                //    {
+                //        NullValueHandling = NullValueHandling.Ignore
+                //    };
+                //    x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
+                //});
+
+                var clientConfig = GetReepayClientConfig(settings);
+                var client = new ReepayClient(clientConfig);
+
+                client.CreateSessionCharge(data);
 
                 var basicAuth = Base64Encode(settings.PrivateKey + ":");
 
@@ -127,7 +134,7 @@ namespace Vendr.Contrib.PaymentProviders
                             .WithHeader("Authorization", "Basic " + basicAuth)
                             .WithHeader("Content-Type", "application/json")
                             .PostJsonAsync(data)
-                            .ReceiveJson<ReepaySessionChargeResultDto>().Result;
+                            .ReceiveJson<ReepaySessionChargeResult>().Result;
 
                 // Get charge session id
                 chargeSessionId = payment.Id;
@@ -348,6 +355,17 @@ namespace Vendr.Contrib.PaymentProviders
         protected string GetTransactionId(ReepayChargeDto payment)
         {
             return payment?.Transaction;
+        }
+
+        protected ReepayClientConfig GetReepayClientConfig(ReepaySettings settings)
+        {
+            var basicAuth = Base64Encode(settings.PrivateKey + ":");
+
+            return new ReepayClientConfig
+            {
+                BaseUrl = "https://api.reepay.com",
+                Authorization = "Basic " + basicAuth
+            };
         }
 
         private ReepayWebhookEvent GetWebhookReepayEvent(HttpRequestBase request, ReepaySettings settings)

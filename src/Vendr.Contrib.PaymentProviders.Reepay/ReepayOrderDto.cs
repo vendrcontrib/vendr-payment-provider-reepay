@@ -1,23 +1,22 @@
-﻿using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    [DataContract]
     public class ReepayOrderDto
     {
-        [DataMember(Name = "handle")]
+        [JsonProperty("handle")]
         public string Handle { get; set; }
 
-        [DataMember(Name = "key", EmitDefaultValue = false)]
+        [JsonProperty("key")]
         public string Key { get; set; }
 
-        [DataMember(Name = "amount")]
+        [JsonProperty("amount")]
         public int Amount { get; set; }
 
-        [DataMember(Name = "currency")]
+        [JsonProperty("currency")]
         public string Currency { get; set; }
 
-        [DataMember(Name = "customer")]
+        [JsonProperty("customer")]
         public ReepayCustomerDto Customer { get; set; }
     }
 }

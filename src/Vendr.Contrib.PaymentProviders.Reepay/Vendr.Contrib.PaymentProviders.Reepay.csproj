@@ -88,15 +88,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\Models\ReepayClientConfig.cs" />
+    <Compile Include="Api\ReepayClient.cs" />
     <Compile Include="Properties\VersionInfo.cs" />
     <Compile Include="ReepayChargeDto.cs" />
-    <Compile Include="ReepayChargeSessionDto.cs" />
+    <Compile Include="ReepaySessionChargeResult.cs" />
     <Compile Include="ReepayCustomerDto.cs" />
     <Compile Include="ReepayEvent.cs" />
     <Compile Include="ReepayOrderDto.cs" />
     <Compile Include="ReepayPaymentProvider.cs" />
     <Compile Include="ReepayRefundDto.cs" />
-    <Compile Include="ReepaySessionChargeDto.cs" />
+    <Compile Include="ReepaySessionCharge.cs" />
     <Compile Include="ReepaySettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReepayWebhookEvent.cs" />
