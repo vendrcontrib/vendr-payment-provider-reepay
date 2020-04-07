@@ -23,6 +23,33 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .ReceiveJson<ReepaySessionChargeResult>());
         }
 
+        public ReepayCharge GetCharge(string handle)
+        {
+            return Request($"/v1/charge/{handle}", false, (req) => req
+                .GetJsonAsync<ReepayCharge>());
+        }
+
+        public ReepayCharge CancelCharge(string handle)
+        {
+            return Request($"/v1/charge/{handle}/cancel", false, (req) => req
+                .PostAsync(null)
+                .ReceiveJson<ReepayCharge>());
+        }
+
+        public ReepayCharge SettleCharge(string handle, object data)
+        {
+            return Request($"/v1/charge/{handle}/settle", false, (req) => req
+                .PostJsonAsync(data)
+                .ReceiveJson<ReepayCharge>());
+        }
+
+        public ReepayCharge RefundCharge(object data)
+        {
+            return Request($"/v1/refund", false, (req) => req
+                .PostJsonAsync(data)
+                .ReceiveJson<ReepayCharge>());
+        }
+
         private TResult Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)
         {
             var result = default(TResult);

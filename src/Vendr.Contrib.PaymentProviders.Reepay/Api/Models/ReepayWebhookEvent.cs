@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace Vendr.Contrib.PaymentProviders.Reepay
+namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
     /// <summary>
     /// Reepay webhook: https://reference.reepay.com/api/#webhooks

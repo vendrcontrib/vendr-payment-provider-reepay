@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Vendr.Contrib.PaymentProviders.Reepay
+namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
     public class ReepayCustomer
     {

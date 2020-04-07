@@ -1,57 +1,56 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
+using System;
 
-namespace Vendr.Contrib.PaymentProviders.Reepay
+namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
     /// <summary>
     /// Reepay charge object: https://reference.reepay.com/api/#charge
     /// </summary>
-    [DataContract]
-    public class ReepayChargeDto
+    public class ReepayCharge
     {
-        [DataMember(Name = "handle")]
+        [JsonProperty("handle")]
         public string Handle { get; set; }
 
-        [DataMember(Name = "state")]
+        [JsonProperty("state")]
         public string State { get; set; }
 
-        [DataMember(Name = "customer")]
+        [JsonProperty("customer")]
         public string Customer { get; set; }
 
-        [DataMember(Name = "amount")]
+        [JsonProperty("amount")]
         public int Amount { get; set; }
 
-        [DataMember(Name = "currency")]
+        [JsonProperty("currency")]
         public string Currency { get; set; }
 
-        [DataMember(Name = "authorized")]
+        [JsonProperty("authorized")]
         public DateTime? Authorized { get; set; }
 
-        [DataMember(Name = "settled")]
+        [JsonProperty("settled")]
         public DateTime? Settled { get; set; }
 
-        [DataMember(Name = "cancelled")]
+        [JsonProperty("cancelled")]
         public DateTime? Cancelled { get; set; }
 
-        [DataMember(Name = "created")]
+        [JsonProperty("created")]
         public DateTime Created { get; set; }
 
-        [DataMember(Name = "transaction")]
+        [JsonProperty("transaction")]
         public string Transaction { get; set; }
 
-        [DataMember(Name = "error")]
+        [JsonProperty("error")]
         public string Error { get; set; }
 
-        [DataMember(Name = "error_state")]
+        [JsonProperty("error_state")]
         public string ErrorState { get; set; } 
 
-        [DataMember(Name = "processing")]
+        [JsonProperty("processing")]
         public bool Processing { get; set; }
 
-        [DataMember(Name = "refunded_amount")]
+        [JsonProperty("refunded_amount")]
         public int RefundedAmount { get; set; }
 
-        [DataMember(Name = "authorized_amount")]
+        [JsonProperty("authorized_amount")]
         public int AuthorizedAmount { get; set; }
 
     }

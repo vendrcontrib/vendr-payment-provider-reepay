@@ -200,13 +200,11 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var basicAuth = Base64Encode(settings.PrivateKey + ":");
-                var handle = order.OrderNumber;
+                var clientConfig = GetReepayClientConfig(settings);
+                var client = new ReepayClient(clientConfig);
 
-                var payment = $"https://api.reepay.com/v1/charge/{handle}"
-                            .WithHeader("Authorization", "Basic " + basicAuth)
-                            .WithHeader("Content-Type", "application/json")
-                            .GetJsonAsync<ReepayChargeDto>().Result;
+                // Get charge
+                var payment = client.GetCharge(order.OrderNumber);
 
                 return new ApiResult()
                 {
@@ -231,20 +229,17 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var basicAuth = Base64Encode(settings.PrivateKey + ":");
-                var handle = order.OrderNumber;
+                var clientConfig = GetReepayClientConfig(settings);
+                var client = new ReepayClient(clientConfig);
 
-                var payment = $"https://api.reepay.com/v1/charge/{handle}/cancel"
-                            .WithHeader("Authorization", "Basic " + basicAuth)
-                            .WithHeader("Content-Type", "application/json")
-                            .PostAsync(null)
-                            .ReceiveJson<ReepayChargeDto>().Result;
+                // Cancel charge
+                var payment = client.CancelCharge(order.OrderNumber);
 
                 return new ApiResult()
                 {
                     TransactionInfo = new TransactionInfoUpdate()
                     {
-                        TransactionId = order.TransactionInfo.TransactionId,
+                        TransactionId = GetTransactionId(payment),
                         PaymentStatus = GetPaymentStatus(payment)
                     }
                 };
@@ -263,17 +258,25 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var basicAuth = Base64Encode(settings.PrivateKey + ":");
-                var handle = order.OrderNumber;
+                var clientConfig = GetReepayClientConfig(settings);
+                var client = new ReepayClient(clientConfig);
 
-                var payment = $"https://api.reepay.com/v1/charge/{handle}/settle"
-                    .WithHeader("Authorization", "Basic " + basicAuth)
-                    .WithHeader("Content-Type", "application/json")
-                    .PostJsonAsync(new
+                var data = new
+                {
+                    amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
+                };
+
+                // Settle charge
+                var payment = client.SettleCharge(order.OrderNumber, data);
+
+                return new ApiResult()
+                {
+                    TransactionInfo = new TransactionInfoUpdate()
                     {
-                        amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
-                    })
-                    .ReceiveJson<ReepayChargeDto>().Result;
+                        TransactionId = GetTransactionId(payment),
+                        PaymentStatus = GetPaymentStatus(payment)
+                    }
+                };
             }
             catch (Exception ex)
             {
@@ -289,18 +292,25 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var basicAuth = Base64Encode(settings.PrivateKey + ":");
-                var handle = order.OrderNumber;
+                var clientConfig = GetReepayClientConfig(settings);
+                var client = new ReepayClient(clientConfig);
 
-                var payment = $"https://api.reepay.com/v1/refund"
-                    .WithHeader("Authorization", "Basic " + basicAuth)
-                    .WithHeader("Content-Type", "application/json")
-                    .PostJsonAsync(new
+                var data = new
+                {
+                    amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
+                };
+
+                // Refund charge
+                var payment = client.RefundCharge(data);
+
+                return new ApiResult()
+                {
+                    TransactionInfo = new TransactionInfoUpdate()
                     {
-                        invoice = handle,
-                        amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
-                    })
-                    .ReceiveJson<ReepayChargeDto>().Result;
+                        TransactionId = GetTransactionId(payment),
+                        PaymentStatus = GetPaymentStatus(payment)
+                    }
+                };
             }
             catch (Exception ex)
             {
@@ -310,7 +320,7 @@ namespace Vendr.Contrib.PaymentProviders
             return ApiResult.Empty;
         }
 
-        protected PaymentStatus GetPaymentStatus(ReepayChargeDto payment)
+        protected PaymentStatus GetPaymentStatus(ReepayCharge payment)
         {
             // Possible Payment statuses:
             // - authorized
@@ -337,7 +347,7 @@ namespace Vendr.Contrib.PaymentProviders
             return PaymentStatus.Initialized;
         }
 
-        protected string GetTransactionId(ReepayChargeDto payment)
+        protected string GetTransactionId(ReepayCharge payment)
         {
             return payment?.Transaction;
         }

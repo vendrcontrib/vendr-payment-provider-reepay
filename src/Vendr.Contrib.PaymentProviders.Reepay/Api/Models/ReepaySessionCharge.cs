@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System.Runtime.Serialization;
 
-namespace Vendr.Contrib.PaymentProviders.Reepay
+namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
     public class ReepaySessionCharge
     {
