@@ -1,33 +1,47 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
     /// <summary>
-    /// Reepay webhook object: https://reference.reepay.com/api/#the-webhook-object
+    /// Reepay webhook: https://reference.reepay.com/api/#webhooks
     /// </summary>
-    [DataContract]
-    public class ReepayWebhookEvent : ReepayEvent
+    public class ReepayWebhookEvent
     {
-        [DataMember(Name = "event_id")]
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("event_id")]
         public string EventId { get; set; }
 
-        [DataMember(Name = "timestamp")]
+        [JsonProperty("event_type")]
+        public string EventType { get; set; }
+
+        [JsonProperty("timestamp")]
         public DateTime Timestamp { get; set; }
 
-        [DataMember(Name = "signature")]
+        [JsonProperty("signature")]
         public string Signature { get; set; }
 
-        [DataMember(Name = "payment_method")]
+        [JsonProperty("customer")]
+        public string Customer { get; set; }
+
+        [JsonProperty("payment_method")]
         public string PaymentMethod { get; set; }
 
-        [DataMember(Name = "transaction")]
+        [JsonProperty("subscription")]
+        public string Subscription { get; set; }
+
+        [JsonProperty("invoice")]
+        public string Invoice { get; set; }
+
+        [JsonProperty("transaction")]
         public string Transaction { get; set; }
 
-        [DataMember(Name = "credit_note")]
+        [JsonProperty("credit_note")]
         public string CreditNote { get; set; }
 
-        [DataMember(Name = "credit")]
+        [JsonProperty("credit")]
         public string Credit { get; set; }
     }
 }

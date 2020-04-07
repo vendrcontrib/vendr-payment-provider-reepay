@@ -39,26 +39,27 @@ namespace Vendr.Contrib.PaymentProviders
             new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
         };
 
-        //public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
-        //{
-        //    try
-        //    {
-        //        var reepayEvent = GetWebhookReepayEvent(request, settings);
-        //        if (reepayEvent != null)
-        //        {
-        //            if (!string.IsNullOrWhiteSpace(reepayEvent.EventId))
-        //            {
-        //                return OrderReference.Parse(reepayEvent.EventId);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
-        //    }
+        public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
+        {
+            try
+            {
+                var reepayEvent = GetWebhookReepayEvent(request, settings);
+                if (reepayEvent != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId) && 
+                        (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
+                    {
+                        return OrderReference.Parse(reepayEvent.EventId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
+            }
 
-        //    return base.GetOrderReference(request, settings);
-        //}
+            return base.GetOrderReference(request, settings);
+        }
 
         public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepaySettings settings)
         {
@@ -371,7 +372,7 @@ namespace Vendr.Contrib.PaymentProviders
                     {
                         var json = reader.ReadToEnd();
 
-                        //reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                        reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
 
                         // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
                         //var signature = CalculateSignature(settings.WebhookSecret, timestamp + id);
