@@ -97,7 +97,7 @@ namespace Vendr.Contrib.PaymentProviders
                         }
                     },
                     Locale = settings.Lang,
-                    Settle = false,
+                    Settle = settings.Capture,
                     AcceptUrl = continueUrl,
                     CancelUrl = cancelUrl
                 };
