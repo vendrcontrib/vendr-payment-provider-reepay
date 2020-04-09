@@ -1,13 +1,7 @@
-﻿using Flurl.Http;
-using Flurl.Http.Configuration;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using Vendr.Contrib.PaymentProviders.Reepay;
@@ -15,16 +9,15 @@ using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 using Vendr.Core;
 using Vendr.Core.Models;
-using Vendr.Core.Web;
 using Vendr.Core.Web.Api;
 using Vendr.Core.Web.PaymentProviders;
 
 namespace Vendr.Contrib.PaymentProviders
 {
-    [PaymentProvider("reepay", "Reepay", "Reepay payment provider", Icon = "icon-invoice")]
-    public class ReepayPaymentProvider : PaymentProviderBase<ReepaySettings>
+    [PaymentProvider("reepay-checkout-onetime", "Reepay (One Time)", "Reepay payment provider for one time payments")]
+    public class ReepayCheckoutOneTimePaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutOneTimeSettings>
     {
-        public ReepayPaymentProvider(VendrContext vendr)
+        public ReepayCheckoutOneTimePaymentProvider(VendrContext vendr)
             : base(vendr)
         { }
 
@@ -39,11 +32,11 @@ namespace Vendr.Contrib.PaymentProviders
             new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
         };
 
-        public override OrderReference GetOrderReference(HttpRequestBase request, ReepaySettings settings)
+        public override OrderReference GetOrderReference(HttpRequestBase request, ReepayCheckoutOneTimeSettings settings)
         {
             try
             {
-                var reepayEvent = GetWebhookReepayEvent(request, settings);
+                var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.EventId) && 
@@ -55,13 +48,13 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetOrderReference");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - GetOrderReference");
             }
 
             return base.GetOrderReference(request, settings);
         }
 
-        public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepaySettings settings)
+        public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepayCheckoutOneTimeSettings settings)
         {
             var currency = Vendr.Services.CurrencyService.GetCurrency(order.CurrencyId);
             var currencyCode = currency.Code.ToUpperInvariant();
@@ -128,7 +121,7 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - error creating payment.");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - error creating payment.");
             }
 
             return new PaymentFormResult()
@@ -143,37 +136,13 @@ namespace Vendr.Contrib.PaymentProviders
             };
         }
 
-        public override string GetCancelUrl(OrderReadOnly order, ReepaySettings settings)
-        {
-            settings.MustNotBeNull("settings");
-            settings.CancelUrl.MustNotBeNull("settings.CancelUrl");
-
-            return settings.CancelUrl;
-        }
-
-        public override string GetErrorUrl(OrderReadOnly order, ReepaySettings settings)
-        {
-            settings.MustNotBeNull("settings");
-            settings.ErrorUrl.MustNotBeNull("settings.ErrorUrl");
-
-            return settings.ErrorUrl;
-        }
-
-        public override string GetContinueUrl(OrderReadOnly order, ReepaySettings settings)
-        {
-            settings.MustNotBeNull("settings");
-            settings.ContinueUrl.MustNotBeNull("settings.ContinueUrl");
-
-            return settings.ContinueUrl;
-        }
-
-        public override CallbackResult ProcessCallback(OrderReadOnly order, HttpRequestBase request, ReepaySettings settings)
+        public override CallbackResult ProcessCallback(OrderReadOnly order, HttpRequestBase request, ReepayCheckoutOneTimeSettings settings)
         {
             try
             {
                 // Process callback
 
-                var reepayEvent = GetWebhookReepayEvent(request, settings);
+                var reepayEvent = GetReepayWebhookEvent(request, settings);
 
                 if (reepayEvent != null && !string.IsNullOrWhiteSpace(reepayEvent.EventId) &&
                    (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
@@ -192,13 +161,13 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - ProcessCallback");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - ProcessCallback");
             }
 
             return CallbackResult.BadRequest();
         }
 
-        public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepaySettings settings)
+        public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
         {
             // Get charge: https://reference.reepay.com/api/#get-charge
 
@@ -221,13 +190,13 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - FetchPaymentStatus");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - FetchPaymentStatus");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CancelPayment(OrderReadOnly order, ReepaySettings settings)
+        public override ApiResult CancelPayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
         {
             // Cancel charge: https://reference.reepay.com/api/#cancel-charge
 
@@ -250,13 +219,13 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - CancelPayment");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - CancelPayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CapturePayment(OrderReadOnly order, ReepaySettings settings)
+        public override ApiResult CapturePayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
         {
             // Settle charge: https://reference.reepay.com/api/#settle-charge
 
@@ -284,13 +253,13 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - CapturePayment");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - CapturePayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult RefundPayment(OrderReadOnly order, ReepaySettings settings)
+        public override ApiResult RefundPayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
         {
             // Create refund: https://reference.reepay.com/api/#create-refund
 
@@ -318,115 +287,10 @@ namespace Vendr.Contrib.PaymentProviders
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - RefundPayment");
+                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - RefundPayment");
             }
 
             return ApiResult.Empty;
-        }
-
-        protected PaymentStatus GetPaymentStatus(ReepayCharge payment)
-        {
-            // Possible Payment statuses:
-            // - authorized
-            // - settled
-            // - failed
-            // - cancelled
-            // - pending
-
-            if (payment.State == "authorized")
-                return PaymentStatus.Authorized;
-
-            if (payment.State == "settled")
-                return PaymentStatus.Captured;
-
-            if (payment.State == "failed")
-                return PaymentStatus.Error;
-
-            if (payment.State == "cancelled")
-                return PaymentStatus.Cancelled;
-
-            if (payment.State == "pending")
-                return PaymentStatus.PendingExternalSystem;
-
-            return PaymentStatus.Initialized;
-        }
-
-        protected string GetTransactionId(ReepayCharge payment)
-        {
-            return payment?.Transaction;
-        }
-
-        protected ReepayClientConfig GetReepayClientConfig(ReepaySettings settings)
-        {
-            var basicAuth = Base64Encode(settings.PrivateKey + ":");
-
-            return new ReepayClientConfig
-            {
-                BaseUrl = "https://api.reepay.com",
-                Authorization = "Basic " + basicAuth
-            };
-        }
-
-        private ReepayWebhookEvent GetWebhookReepayEvent(HttpRequestBase request, ReepaySettings settings)
-        {
-            ReepayWebhookEvent reepayEvent = null;
-
-            if (HttpContext.Current.Items["Vendr_ReepayEvent"] != null)
-            {
-                reepayEvent = (ReepayWebhookEvent)HttpContext.Current.Items["Vendr_ReepayEvent"];
-            }
-            else
-            {
-                try
-                {
-                    if (request.InputStream.CanSeek)
-                        request.InputStream.Seek(0, SeekOrigin.Begin);
-
-                    using (var reader = new StreamReader(request.InputStream))
-                    {
-                        var json = reader.ReadToEnd();
-
-                        reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
-
-                        // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
-                        //var signature = CalculateSignature(settings.WebhookSecret, timestamp + id);
-                        //if (signature != reepayEvent.Signature)
-                        //{
-
-                        //}
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Vendr.Log.Error<ReepayPaymentProvider>(ex, "Reepay - GetWebhookReepayEvent");
-                }
-            }
-
-            return reepayEvent;
-        }
-
-        private string CalculateSignature(string webhookSecret, string timestamp, string id)
-        {
-            // signature = hexencode(hmac_sha_256(webhook_secret, timestamp + id))
-
-            var signature = ComputeSignature(webhookSecret, timestamp, id);
-
-            return signature;
-        }
-
-        private string ComputeSignature(string secret, string timestamp, string id)
-        {
-            using (var cryptographer = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
-            {
-                byte[] buffer = Encoding.UTF8.GetBytes(timestamp + id);
-                var hash = cryptographer.ComputeHash(buffer);
-                return HexEncode(hash).ToLowerInvariant();
-            }
-        }
-        
-        private string HexEncode(byte[] data)
-        {
-            return BitConverter.ToString(data).Replace("-", string.Empty);
         }
     }
 }

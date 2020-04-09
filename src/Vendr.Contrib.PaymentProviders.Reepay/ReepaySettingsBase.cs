@@ -1,8 +1,8 @@
 ﻿using Vendr.Core.Web.PaymentProviders;
 
-namespace Vendr.Contrib.PaymentProviders
+namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    public class ReepaySettings
+    public class ReepaySettingsBase
     {
         [PaymentProviderSetting(Name = "Continue URL",
             Description = "The URL to continue to after this provider has done processing. eg: /continue/",
@@ -26,17 +26,12 @@ namespace Vendr.Contrib.PaymentProviders
 
         [PaymentProviderSetting(Name = "Language",
             Description = "The language of the payment portal to display.",
-            SortOrder = 900)]
+            SortOrder = 800)]
         public string Lang { get; set; }
 
         [PaymentProviderSetting(Name = "Accepted Payment Methods",
             Description = "A comma separated list of Payment Methods to accept.",
-            SortOrder = 1000)]
+            SortOrder = 900)]
         public string PaymentMethods { get; set; }
-
-        [PaymentProviderSetting(Name = "Test Mode",
-            Description = "Set whether to process payments in test mode.",
-            SortOrder = 10000)]
-        public bool TestMode { get; set; }
     }
 }

@@ -95,12 +95,14 @@
     <Compile Include="Api\Models\ReepaySessionChargeResult.cs" />
     <Compile Include="Api\Models\ReepayCustomer.cs" />
     <Compile Include="Api\Models\ReepayOrder.cs" />
-    <Compile Include="ReepayPaymentProvider.cs" />
+    <Compile Include="ReepayCheckoutOneTimePaymentProvider.cs" />
     <Compile Include="Api\Models\ReepayRefund.cs" />
     <Compile Include="Api\Models\ReepaySessionCharge.cs" />
-    <Compile Include="ReepaySettings.cs" />
+    <Compile Include="ReepayPaymentProviderBase.cs" />
+    <Compile Include="ReepayCheckoutOneTimeSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Api\Models\ReepayWebhookEvent.cs" />
+    <Compile Include="ReepaySettingsBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
