@@ -103,19 +103,25 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     if (request.InputStream.CanSeek)
                         request.InputStream.Seek(0, SeekOrigin.Begin);
 
-                    using (var reader = new StreamReader(request.InputStream))
+                    using (var sr = new StreamReader(request.InputStream))
+                    using (var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None })
                     {
-                        var json = reader.ReadToEnd();
+                        JObject obj = (JObject)JToken.ReadFrom(jr);
 
-                        if (!string.IsNullOrEmpty(json) && JObject.Parse(json).TryGetValue("signature", out JToken token))
+                        if (obj != null)
                         {
-                            // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
-                            //var signature = CalculateSignature(settings.WebhookSecret, timestamp + id);
+                            if (obj.TryGetValue("signature", out JToken signature) && 
+                                obj.TryGetValue("timestamp", out JToken timestamp) &&
+                                obj.TryGetValue("id", out JToken id))
+                            {
+                                // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
+                                var calcSignature = CalculateSignature(settings.WebhookSecret, timestamp.Value<string>(), id.Value<string>());
 
-                            //if (token.Value<string>() == signature)
-                            //{
-                            reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
-                            //}
+                                if (signature.Value<string>() == calcSignature)
+                                {
+                                    //reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                                }
+                            }
                         }
                     }
                 }
