@@ -83,7 +83,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             return new ReepayClientConfig
             {
                 BaseUrl = "https://api.reepay.com",
-                Authorization = "Basic " + basicAuth
+                Authorization = "Basic " + basicAuth,
+                WebhookSecret = settings.WebhookSecret
             };
         }
 

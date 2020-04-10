@@ -24,6 +24,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             SortOrder = 500)]
         public string PrivateKey { get; set; }
 
+        [PaymentProviderSetting(Name = "Webhook Secret",
+            Description = "Webhook Secret from the Reepay administration portal.",
+            SortOrder = 600)]
+        public string WebhookSecret { get; set; }
+
         [PaymentProviderSetting(Name = "Language",
             Description = "The language of the payment portal to display.",
             SortOrder = 800)]
