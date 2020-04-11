@@ -119,7 +119,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                                 if (signature.Value<string>() == calcSignature)
                                 {
-                                    //reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                                    var json = obj.ToString(Formatting.None);
+
+                                    reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
                                 }
                             }
                         }
