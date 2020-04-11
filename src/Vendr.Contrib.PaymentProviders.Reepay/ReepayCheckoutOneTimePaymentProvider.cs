@@ -62,7 +62,7 @@ namespace Vendr.Contrib.PaymentProviders
             // Ensure currency has valid ISO 4217 code
             if (!Iso4217.CurrencyCodes.ContainsKey(currencyCode))
             {
-                throw new Exception("Currency must a valid ISO 4217 currency code: " + currency.Name);
+                throw new Exception("Currency must be a valid ISO 4217 currency code: " + currency.Name);
             }
 
             var orderAmount = AmountToMinorUnits(order.TotalPrice.Value.WithTax).ToString("0", CultureInfo.InvariantCulture);
