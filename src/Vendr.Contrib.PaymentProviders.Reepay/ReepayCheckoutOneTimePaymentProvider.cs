@@ -9,6 +9,7 @@ using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 using Vendr.Core;
 using Vendr.Core.Models;
+using Vendr.Core.Web;
 using Vendr.Core.Web.Api;
 using Vendr.Core.Web.PaymentProviders;
 
@@ -39,10 +40,16 @@ namespace Vendr.Contrib.PaymentProviders
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId) && 
+                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId) && !string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
                         (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
                     {
-                        return OrderReference.Parse(reepayEvent.EventId);
+                        var clientConfig = GetReepayClientConfig(settings);
+                        var client = new ReepayClient(clientConfig);
+                        var metadata = client.GetInvoiceMetaData(reepayEvent.Invoice);
+                        if (metadata != null)
+                        {
+                            return OrderReference.Parse(reepayEvent.Invoice);
+                        }
                     }
                 }
             }
@@ -82,8 +89,10 @@ namespace Vendr.Contrib.PaymentProviders
             {
                 var data = new ReepaySessionCharge
                 {
+                    //Configuration = order.GenerateOrderReference().ToString(),
                     Order = new ReepayOrder
                     {
+                        Key = order.GenerateOrderReference(),
                         Handle = order.OrderNumber,
                         Amount = Convert.ToInt32(orderAmount),
                         Currency = currencyCode,
@@ -94,7 +103,15 @@ namespace Vendr.Contrib.PaymentProviders
                             FirstName = order.CustomerInfo.FirstName,
                             LastName = order.CustomerInfo.LastName,
                             GenerateHandle = string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
+                        },
+                        MetaData = new
+                        {
+                            orderReference = order.GenerateOrderReference()
                         }
+                        //MetaData = new Dictionary<string, object>()
+                        //{
+                        //    { "orderReference", order.GenerateOrderReference().ToString() }
+                        //}
                     },
                     Locale = settings.Lang,
                     Settle = settings.Capture,

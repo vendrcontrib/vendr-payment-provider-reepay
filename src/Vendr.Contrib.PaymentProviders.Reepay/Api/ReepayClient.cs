@@ -2,6 +2,7 @@
 using Flurl.Http.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 
@@ -50,14 +51,18 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .ReceiveJson<ReepayCharge>());
         }
 
+        public string GetInvoiceMetaData(string handle)
+        {
+            return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
+                .GetJsonAsync<string>());
+        }
+
         private TResult Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)
         {
             var result = default(TResult);
 
             try
             {
-                //var basicAuth = Base64Encode(settings.PrivateKey + ":");
-
                 var baseUrl = checkoutApi ? _config.BaseUrl.Replace("api.", "checkout-api.") : _config.BaseUrl;
 
                 var req = new FlurlRequest(baseUrl + url)
@@ -78,8 +83,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             }
             catch (FlurlHttpException ex)
             {
-                dynamic d = ex.GetResponseJsonAsync();
-
                 throw;
             }
 
