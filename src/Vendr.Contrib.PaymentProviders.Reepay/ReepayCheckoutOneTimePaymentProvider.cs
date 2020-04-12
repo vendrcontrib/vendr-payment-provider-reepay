@@ -161,8 +161,7 @@ namespace Vendr.Contrib.PaymentProviders
 
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
 
-                if (reepayEvent != null && !string.IsNullOrWhiteSpace(reepayEvent.EventId) &&
-                   (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
+                if (reepayEvent != null && (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
                 {
                     return CallbackResult.Ok(new TransactionInfo
                     {
