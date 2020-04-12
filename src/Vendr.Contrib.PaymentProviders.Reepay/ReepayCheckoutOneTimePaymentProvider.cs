@@ -41,7 +41,7 @@ namespace Vendr.Contrib.PaymentProviders
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(reepayEvent.EventId) && !string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
+                    if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
                         (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
                     {
                         var clientConfig = GetReepayClientConfig(settings);
@@ -49,7 +49,10 @@ namespace Vendr.Contrib.PaymentProviders
                         var metadata = client.GetInvoiceMetaData(reepayEvent.Invoice);
                         if (metadata != null)
                         {
-                            return OrderReference.Parse(reepayEvent.Invoice);
+                            if (metadata.TryGetValue("orderReference", out object orderReference))
+                            {
+                                return OrderReference.Parse(orderReference.ToString());
+                            }
                         }
                     }
                 }
