@@ -51,10 +51,17 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .ReceiveJson<ReepayCharge>());
         }
 
-        public string GetInvoiceMetaData(string handle)
+        public Dictionary<string, object> GetInvoiceMetaData(string handle)
         {
-            return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
-                .GetJsonAsync<string>());
+            //return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
+            //    .GetJsonAsync<string>());
+
+            var request = $"https://api.reepay.com/v1/invoice/{handle}/metadata"
+                        .WithHeader("Authorization", _config.Authorization)
+                        //.WithHeader("Content-Type", "application/json")
+                        .GetJsonAsync<Dictionary<string, object>>();
+
+            return request.Result;
         }
 
         private TResult Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)

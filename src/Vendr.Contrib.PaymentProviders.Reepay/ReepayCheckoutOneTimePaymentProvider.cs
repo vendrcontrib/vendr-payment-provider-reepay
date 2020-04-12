@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -104,14 +105,10 @@ namespace Vendr.Contrib.PaymentProviders
                             LastName = order.CustomerInfo.LastName,
                             GenerateHandle = string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
                         },
-                        MetaData = new
+                        MetaData = new Dictionary<string, object>()
                         {
-                            orderReference = order.GenerateOrderReference()
+                            { "orderReference", order.GenerateOrderReference().ToString() }
                         }
-                        //MetaData = new Dictionary<string, object>()
-                        //{
-                        //    { "orderReference", order.GenerateOrderReference().ToString() }
-                        //}
                     },
                     Locale = settings.Lang,
                     Settle = settings.Capture,
