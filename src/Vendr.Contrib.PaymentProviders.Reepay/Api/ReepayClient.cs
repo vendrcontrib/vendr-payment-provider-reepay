@@ -20,6 +20,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
         public ReepaySessionChargeResult CreateSessionCharge(ReepaySessionCharge data)
         {
             return Request("/v1/session/charge", true, (req) => req
+                .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepaySessionChargeResult>());
         }
@@ -33,6 +34,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
         public ReepayCharge CancelCharge(string handle)
         {
             return Request($"/v1/charge/{handle}/cancel", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
                 .PostAsync(null)
                 .ReceiveJson<ReepayCharge>());
         }
@@ -40,6 +42,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
         public ReepayCharge SettleCharge(string handle, object data)
         {
             return Request($"/v1/charge/{handle}/settle", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepayCharge>());
         }
@@ -47,21 +50,15 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
         public ReepayCharge RefundCharge(object data)
         {
             return Request($"/v1/refund", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepayCharge>());
         }
 
         public Dictionary<string, object> GetInvoiceMetaData(string handle)
         {
-            //return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
-            //    .GetJsonAsync<string>());
-
-            var request = $"https://api.reepay.com/v1/invoice/{handle}/metadata"
-                        .WithHeader("Authorization", _config.Authorization)
-                        //.WithHeader("Content-Type", "application/json")
-                        .GetJsonAsync<Dictionary<string, object>>();
-
-            return request.Result;
+            return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
+                .GetJsonAsync<Dictionary<string, object>>());
         }
 
         private TResult Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)
@@ -83,8 +80,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                             };
                             x.JsonSerializer = new NewtonsoftJsonSerializer(jsonSettings);
                         })
-                        .WithHeader("Authorization", _config.Authorization)
-                        .WithHeader("Content-Type", "application/json");
+                        .WithHeader("Authorization", _config.Authorization);
 
                 result = func.Invoke(req).Result;
             }
