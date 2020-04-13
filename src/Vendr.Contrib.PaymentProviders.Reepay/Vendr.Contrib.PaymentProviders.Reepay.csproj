@@ -88,6 +88,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\Models\ReepayAddress.cs" />
     <Compile Include="Api\Models\ReepayClientConfig.cs" />
     <Compile Include="Api\ReepayClient.cs" />
     <Compile Include="Properties\VersionInfo.cs" />
