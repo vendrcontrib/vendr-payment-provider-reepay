@@ -34,8 +34,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         [JsonProperty("company")]
         public string Company { get; set; }
 
-        [JsonProperty("vat")]
-        public string VAT { get; set; }
+        //[JsonProperty("vat")]
+        //public string VAT { get; set; }
 
         [JsonProperty("handle")]
         public string Handle { get; set; }
@@ -43,7 +43,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         [JsonProperty("generate_handle")]
         public bool GenerateHandle { get; set; }
 
-        [JsonProperty("test")]
-        public bool Test { get; set; }
+        //[JsonProperty("test")]
+        //public bool Test { get; set; }
     }
 }
