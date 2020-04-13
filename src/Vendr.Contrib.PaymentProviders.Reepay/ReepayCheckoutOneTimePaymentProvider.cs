@@ -113,11 +113,15 @@ namespace Vendr.Contrib.PaymentProviders
                             { "orderReference", order.GenerateOrderReference().ToString() }
                         }
                     },
-                    Locale = settings.Lang,
                     Settle = settings.Capture,
                     AcceptUrl = continueUrl,
                     CancelUrl = cancelUrl
                 };
+
+                if (!string.IsNullOrWhiteSpace(settings.Lang))
+                {
+                    data.Locale = settings.Lang;
+                }
 
                 if (paymentMethods?.Length > 0)
                 {

@@ -30,7 +30,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         public string WebhookSecret { get; set; }
 
         [PaymentProviderSetting(Name = "Language",
-            Description = "The language of the payment portal to display.",
+            Description = "The language of the payment portal to display. Defaults to configuration locale or account locale.",
             SortOrder = 800)]
         public string Lang { get; set; }
 
