@@ -106,22 +106,25 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     using (var sr = new StreamReader(request.InputStream))
                     using (var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None })
                     {
-                        JObject obj = (JObject)JToken.ReadFrom(jr);
-
-                        if (obj != null)
+                        while(jr.Read())
                         {
-                            if (obj.TryGetValue("signature", out JToken signature) && 
-                                obj.TryGetValue("timestamp", out JToken timestamp) &&
-                                obj.TryGetValue("id", out JToken id))
+                            JObject obj = (JObject)JToken.ReadFrom(jr);
+
+                            if (obj != null)
                             {
-                                // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
-                                var calcSignature = CalculateSignature(settings.WebhookSecret, timestamp.Value<string>(), id.Value<string>());
-
-                                if (signature.Value<string>() == calcSignature)
+                                if (obj.TryGetValue("signature", out JToken signature) &&
+                                    obj.TryGetValue("timestamp", out JToken timestamp) &&
+                                    obj.TryGetValue("id", out JToken id))
                                 {
-                                    var json = obj.ToString(Formatting.None);
+                                    // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
+                                    var calcSignature = CalculateSignature(settings.WebhookSecret, timestamp.Value<string>(), id.Value<string>());
 
-                                    reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                                    if (signature.Value<string>() == calcSignature)
+                                    {
+                                        var json = obj.ToString(Formatting.None);
+
+                                        reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                                    }
                                 }
                             }
                         }
