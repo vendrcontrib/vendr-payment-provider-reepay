@@ -125,6 +125,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                 }
                             }
                         }
+
+                        HttpContext.Current.Items["Vendr_ReepayEvent"] = reepayEvent;
                     }
                 }
                 catch (Exception ex)
