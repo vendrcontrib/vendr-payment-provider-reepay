@@ -76,6 +76,10 @@ namespace Vendr.Contrib.PaymentProviders
                 throw new Exception("Currency must be a valid ISO 4217 currency code: " + currency.Name);
             }
 
+            var billingCountry = order.PaymentInfo.CountryId.HasValue
+                ? Vendr.Services.CountryService.GetCountry(order.PaymentInfo.CountryId.Value)
+                : null;
+
             var orderAmount = AmountToMinorUnits(order.TotalPrice.Value.WithTax).ToString("0", CultureInfo.InvariantCulture);
 
             var paymentMethods = settings.PaymentMethods?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -106,6 +110,7 @@ namespace Vendr.Contrib.PaymentProviders
                             Handle = order.CustomerInfo.CustomerReference,
                             FirstName = order.CustomerInfo.FirstName,
                             LastName = order.CustomerInfo.LastName,
+                            Country = billingCountry?.Code,
                             GenerateHandle = string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
                         },
                         MetaData = new Dictionary<string, object>()
