@@ -165,6 +165,12 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             return reepayEvent;
         }
 
+        protected string GenerateReference(string input)
+        {
+            var hash = MD5Hash(input);
+            return new Guid(hash).ToString();
+        }
+
         private string CalculateSignature(string webhookSecret, string timestamp, string id)
         {
             // signature = hexencode(hmac_sha_256(webhook_secret, timestamp + id))

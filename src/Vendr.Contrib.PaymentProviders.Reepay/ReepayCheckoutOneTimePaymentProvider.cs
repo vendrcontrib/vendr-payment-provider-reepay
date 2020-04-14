@@ -95,6 +95,10 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
+                var customerHandle = !string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
+                                        ? order.CustomerInfo.CustomerReference
+                                        : GenerateReference(order.CustomerInfo.Email);
+
                 var data = new ReepaySessionCharge
                 {
                     //Configuration = order.GenerateOrderReference().ToString(),
@@ -107,11 +111,11 @@ namespace Vendr.Contrib.PaymentProviders
                         Customer = new ReepayCustomer
                         {
                             Email = order.CustomerInfo.Email,
-                            Handle = order.CustomerInfo.CustomerReference,
+                            Handle = customerHandle,
                             FirstName = order.CustomerInfo.FirstName,
                             LastName = order.CustomerInfo.LastName,
                             Country = billingCountry?.Code,
-                            GenerateHandle = string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
+                            GenerateHandle = string.IsNullOrEmpty(customerHandle)
                         },
                         MetaData = new Dictionary<string, object>()
                         {
