@@ -47,12 +47,12 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .ReceiveJson<ReepayCharge>());
         }
 
-        public ReepayCharge RefundCharge(object data)
+        public ReepayRefund RefundCharge(object data)
         {
             return Request($"/v1/refund", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
-                .ReceiveJson<ReepayCharge>());
+                .ReceiveJson<ReepayRefund>());
         }
 
         public Dictionary<string, object> GetInvoiceMetaData(string handle)

@@ -44,7 +44,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             return settings.ErrorUrl;
         }
 
-        protected PaymentStatus GetPaymentStatus(ReepayCharge payment)
+        protected PaymentStatus GetPaymentStatus(ReepayCharge charge)
         {
             // Possible Payment statuses:
             // - authorized
@@ -53,27 +53,51 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             // - cancelled
             // - pending
 
-            if (payment.State == "authorized")
+            if (charge.State == "authorized")
                 return PaymentStatus.Authorized;
 
-            if (payment.State == "settled")
+            if (charge.State == "settled")
                 return PaymentStatus.Captured;
 
-            if (payment.State == "failed")
+            if (charge.State == "failed")
                 return PaymentStatus.Error;
 
-            if (payment.State == "cancelled")
+            if (charge.State == "cancelled")
                 return PaymentStatus.Cancelled;
 
-            if (payment.State == "pending")
+            if (charge.State == "pending")
                 return PaymentStatus.PendingExternalSystem;
 
             return PaymentStatus.Initialized;
         }
 
-        protected string GetTransactionId(ReepayCharge payment)
+        protected PaymentStatus GetPaymentStatus(ReepayRefund refund)
         {
-            return payment?.Transaction;
+            // Possible Payment statuses:
+            // - refunded
+            // - failed
+            // - processing
+
+            if (refund.State == "refunded")
+                return PaymentStatus.Refunded;
+
+            if (refund.State == "failed")
+                return PaymentStatus.Error;
+
+            if (refund.State == "processing")
+                return PaymentStatus.PendingExternalSystem;
+
+            return PaymentStatus.Authorized;
+        }
+
+        protected string GetTransactionId(ReepayCharge charge)
+        {
+            return charge?.Transaction;
+        }
+
+        protected string GetTransactionId(ReepayRefund refund)
+        {
+            return refund?.Transaction;
         }
 
         protected ReepayClientConfig GetReepayClientConfig(ReepaySettingsBase settings)

@@ -37,5 +37,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 
         [JsonProperty("type")]
         public string Type { get; set; }
+
+        [JsonProperty("credit_note_id")]
+        public string CreditNoteId { get; set; }
+
+        [JsonProperty("ref_transaction")]
+        public string RefTransaction { get; set; }
     }
 }

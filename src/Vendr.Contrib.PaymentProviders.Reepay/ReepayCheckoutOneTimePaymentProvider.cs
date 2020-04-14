@@ -295,18 +295,19 @@ namespace Vendr.Contrib.PaymentProviders
 
                 var data = new
                 {
+                    invoice = order.OrderNumber,
                     amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
                 };
 
                 // Refund charge
-                var payment = client.RefundCharge(data);
+                var refund = client.RefundCharge(data);
 
                 return new ApiResult()
                 {
                     TransactionInfo = new TransactionInfoUpdate()
                     {
-                        TransactionId = GetTransactionId(payment),
-                        PaymentStatus = GetPaymentStatus(payment)
+                        TransactionId = GetTransactionId(refund),
+                        PaymentStatus = GetPaymentStatus(refund)
                     }
                 };
             }
