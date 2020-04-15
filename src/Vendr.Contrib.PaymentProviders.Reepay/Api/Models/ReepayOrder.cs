@@ -30,6 +30,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         public ReepayAddress ShippingAddress { get; set; }
 
         [JsonProperty("metadata")]
-        public object MetaData { get; set; }
+        public Dictionary<string, object> MetaData { get; set; }
     }
 }

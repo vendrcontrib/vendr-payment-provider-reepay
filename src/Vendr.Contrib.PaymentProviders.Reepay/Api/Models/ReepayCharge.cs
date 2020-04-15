@@ -52,6 +52,5 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 
         [JsonProperty("authorized_amount")]
         public int AuthorizedAmount { get; set; }
-
     }
 }
