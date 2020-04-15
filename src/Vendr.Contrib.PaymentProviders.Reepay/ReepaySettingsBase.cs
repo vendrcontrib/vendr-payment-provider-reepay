@@ -64,10 +64,10 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             SortOrder = 1200)]
         public string WebhookSecret { get; set; }
 
-        [PaymentProviderSetting(Name = "Language",
-            Description = "The language of the payment portal to display. Defaults to configuration locale or account locale.",
+        [PaymentProviderSetting(Name = "Locale",
+            Description = "The locale of the payment portal to display. Defaults to configuration locale or account locale.",
             SortOrder = 1300)]
-        public string Lang { get; set; }
+        public string Locale { get; set; }
 
         [PaymentProviderSetting(Name = "Accepted Payment Methods",
             Description = "A comma separated list of Payment Methods to accept.",

@@ -157,9 +157,9 @@ namespace Vendr.Contrib.PaymentProviders
                     CancelUrl = cancelUrl
                 };
 
-                if (!string.IsNullOrWhiteSpace(settings.Lang))
+                if (!string.IsNullOrWhiteSpace(settings.Locale))
                 {
-                    data.Locale = settings.Lang;
+                    data.Locale = settings.Locale;
                 }
 
                 if (paymentMethods?.Length > 0)
