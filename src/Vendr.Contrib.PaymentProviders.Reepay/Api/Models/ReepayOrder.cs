@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
@@ -15,6 +16,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 
         [JsonProperty("currency")]
         public string Currency { get; set; }
+
+        [JsonProperty("order_lines")]
+        public List<ReepayOrderLine> OrderLines { get; set; }
 
         [JsonProperty("customer")]
         public ReepayCustomer Customer { get; set; }

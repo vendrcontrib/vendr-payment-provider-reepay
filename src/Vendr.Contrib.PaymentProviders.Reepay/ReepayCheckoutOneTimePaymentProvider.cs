@@ -99,15 +99,25 @@ namespace Vendr.Contrib.PaymentProviders
                                         ? order.CustomerInfo.CustomerReference
                                         : GenerateReference(order.CustomerInfo.Email);
 
+                var orderLines = order.OrderLines
+                                        .Select(x => new ReepayOrderLine
+                                        {
+                                            OrderText = x.Name,
+                                            Quantity = (int)(x.Quantity),
+                                            Amount = (int)AmountToMinorUnits(x.UnitPrice.Value.WithTax),
+                                            VAT = (float)x.TaxRate.Value
+                                        })
+                                        .ToList();
+
                 var data = new ReepaySessionCharge
                 {
-                    //Configuration = order.GenerateOrderReference().ToString(),
                     Order = new ReepayOrder
                     {
                         Key = order.GenerateOrderReference(),
                         Handle = order.OrderNumber,
                         Amount = Convert.ToInt32(orderAmount),
                         Currency = currencyCode,
+                        OrderLines = orderLines,
                         Customer = new ReepayCustomer
                         {
                             Email = order.CustomerInfo.Email,
@@ -147,6 +157,7 @@ namespace Vendr.Contrib.PaymentProviders
                 // Get charge session id
                 chargeSessionId = payment.Id;
 
+                // Get charge session url
                 paymentFormLink = payment.Url;
             }
             catch (Exception ex)
