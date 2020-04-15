@@ -90,7 +90,7 @@ namespace Vendr.Contrib.PaymentProviders
 
             var customerHandle = !string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
                                         ? order.CustomerInfo.CustomerReference
-                                        : GenerateReference(order.CustomerInfo.Email);
+                                        : Guid.NewGuid().ToString();
 
             string paymentFormLink = string.Empty;
 
