@@ -125,8 +125,38 @@ namespace Vendr.Contrib.PaymentProviders
                             Handle = customerHandle,
                             FirstName = order.CustomerInfo.FirstName,
                             LastName = order.CustomerInfo.LastName,
+                            Company = !string.IsNullOrWhiteSpace(settings.BillingCompanyPropertyAlias)
+                                ? order.Properties[settings.BillingCompanyPropertyAlias] : null,
+                            Address = !string.IsNullOrWhiteSpace(settings.BillingAddressLine1PropertyAlias)
+                                ? order.Properties[settings.BillingAddressLine1PropertyAlias] : null,
+                            Address2 = !string.IsNullOrWhiteSpace(settings.BillingAddressLine2PropertyAlias)
+                                ? order.Properties[settings.BillingAddressLine2PropertyAlias] : null,
+                            PostalCode = !string.IsNullOrWhiteSpace(settings.BillingAddressZipCodePropertyAlias)
+                                ? order.Properties[settings.BillingAddressZipCodePropertyAlias] : null,
+                            City = !string.IsNullOrWhiteSpace(settings.BillingAddressCityPropertyAlias)
+                                ? order.Properties[settings.BillingAddressCityPropertyAlias] : null,
+                            Phone = !string.IsNullOrWhiteSpace(settings.BillingPhonePropertyAlias)
+                                ? order.Properties[settings.BillingPhonePropertyAlias] : null,
                             Country = billingCountry?.Code,
                             GenerateHandle = string.IsNullOrEmpty(customerHandle)
+                        },
+                        BillingAddress = new ReepayAddress
+                        {
+                            FirstName = order.CustomerInfo.FirstName,
+                            LastName = order.CustomerInfo.LastName,
+                            Company = !string.IsNullOrWhiteSpace(settings.BillingCompanyPropertyAlias)
+                                ? order.Properties[settings.BillingCompanyPropertyAlias] : null,
+                            Address = !string.IsNullOrWhiteSpace(settings.BillingAddressLine1PropertyAlias)
+                                ? order.Properties[settings.BillingAddressLine1PropertyAlias] : null,
+                            Address2 = !string.IsNullOrWhiteSpace(settings.BillingAddressLine2PropertyAlias)
+                                ? order.Properties[settings.BillingAddressLine2PropertyAlias] : null,
+                            PostalCode = !string.IsNullOrWhiteSpace(settings.BillingAddressZipCodePropertyAlias)
+                                ? order.Properties[settings.BillingAddressZipCodePropertyAlias] : null,
+                            City = !string.IsNullOrWhiteSpace(settings.BillingAddressCityPropertyAlias)
+                                ? order.Properties[settings.BillingAddressCityPropertyAlias] : null,
+                            Phone = !string.IsNullOrWhiteSpace(settings.BillingPhonePropertyAlias)
+                                ? order.Properties[settings.BillingPhonePropertyAlias] : null,
+                            Country = billingCountry?.Code
                         },
                         MetaData = new Dictionary<string, object>()
                         {
