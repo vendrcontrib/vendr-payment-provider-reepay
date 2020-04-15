@@ -100,16 +100,6 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var orderLines = order.OrderLines
-                                        .Select(x => new ReepayOrderLine
-                                        {
-                                            OrderText = x.Name,
-                                            Quantity = Convert.ToInt32(x.Quantity),
-                                            Amount = Convert.ToInt32(AmountToMinorUnits(x.UnitPrice.Value.WithTax)),
-                                            VAT = Convert.ToSingle(x.TaxRate.Value)
-                                        })
-                                        .ToList();
-
                 var data = new ReepaySessionCharge
                 {
                     Order = new ReepayOrder
@@ -118,7 +108,6 @@ namespace Vendr.Contrib.PaymentProviders
                         Handle = order.OrderNumber,
                         Amount = Convert.ToInt32(orderAmount),
                         Currency = currencyCode,
-                        OrderLines = orderLines,
                         Customer = new ReepayCustomer
                         {
                             Email = order.CustomerInfo.Email,
