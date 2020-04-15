@@ -46,7 +46,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
         protected PaymentStatus GetPaymentStatus(ReepayCharge charge)
         {
-            // Possible Payment statuses:
+            // Possible Charge statuses:
             // - authorized
             // - settled
             // - failed
@@ -73,7 +73,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
         protected PaymentStatus GetPaymentStatus(ReepayRefund refund)
         {
-            // Possible Payment statuses:
+            // Possible Refund statuses:
             // - refunded
             // - failed
             // - processing
