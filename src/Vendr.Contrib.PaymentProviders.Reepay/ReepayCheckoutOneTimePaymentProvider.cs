@@ -103,9 +103,9 @@ namespace Vendr.Contrib.PaymentProviders
                                         .Select(x => new ReepayOrderLine
                                         {
                                             OrderText = x.Name,
-                                            Quantity = (int)(x.Quantity),
-                                            Amount = (int)AmountToMinorUnits(x.UnitPrice.Value.WithTax),
-                                            VAT = (float)x.TaxRate.Value
+                                            Quantity = Convert.ToInt32(x.Quantity),
+                                            Amount = Convert.ToInt32(AmountToMinorUnits(x.UnitPrice.Value.WithTax)),
+                                            VAT = Convert.ToSingle(x.TaxRate.Value)
                                         })
                                         .ToList();
 
