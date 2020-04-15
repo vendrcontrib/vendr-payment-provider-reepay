@@ -31,7 +31,8 @@ namespace Vendr.Contrib.PaymentProviders
         public override bool FinalizeAtContinueUrl => true;
 
         public override IEnumerable<TransactionMetaDataDefinition> TransactionMetaDataDefinitions => new[]{
-            new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID")
+            new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID"),
+            new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
         public override OrderReference GetOrderReference(HttpRequestBase request, ReepayCheckoutOneTimeSettings settings)
@@ -87,6 +88,10 @@ namespace Vendr.Contrib.PaymentProviders
                    .Select(s => s.Trim())
                    .ToArray();
 
+            var customerHandle = !string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
+                                        ? order.CustomerInfo.CustomerReference
+                                        : GenerateReference(order.CustomerInfo.Email);
+
             string paymentFormLink = string.Empty;
 
             var chargeSessionId = order.Properties["reepayChargeSessionId"]?.Value;
@@ -95,10 +100,6 @@ namespace Vendr.Contrib.PaymentProviders
 
             try
             {
-                var customerHandle = !string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
-                                        ? order.CustomerInfo.CustomerReference
-                                        : GenerateReference(order.CustomerInfo.Email);
-
                 var orderLines = order.OrderLines
                                         .Select(x => new ReepayOrderLine
                                         {
@@ -169,7 +170,8 @@ namespace Vendr.Contrib.PaymentProviders
             {
                 MetaData = new Dictionary<string, string>
                 {
-                    { "reepayChargeSessionId", chargeSessionId }
+                    { "reepayChargeSessionId", chargeSessionId },
+                    { "reepayCustomerHandle", customerHandle }
                 },
                 Form = new PaymentForm(paymentFormLink, FormMethod.Get)
                             .WithJsFile("https://checkout.reepay.com/checkout.js")
