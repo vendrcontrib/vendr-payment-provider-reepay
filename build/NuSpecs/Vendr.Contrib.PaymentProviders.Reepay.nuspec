@@ -26,9 +26,9 @@
         <file src="$SrcDir$\assets\logo-64.png" target="images\icon.png" />
         
         <!-- libs -->
-        <file src="$SrcDir$\bin\Vendr.Contrib.PaymentProviders.Template.dll" target="lib\net472\Vendr.Contrib.PaymentProviders.Template.dll" />
+        <file src="$SrcDir$\bin\Vendr.Contrib.PaymentProviders.Reepay.dll" target="lib\net472\Vendr.Contrib.PaymentProviders.Reepay.dll" />
 
         <!-- symbols -->
-        <file src="$SrcDir$\bin\Vendr.Contrib.PaymentProviders.Template.pdb" target="lib\net472\Vendr.Contrib.PaymentProviders.Template.pdb" />
+        <file src="$SrcDir$\bin\Vendr.Contrib.PaymentProviders.Reepay.pdb" target="lib\net472\Vendr.Contrib.PaymentProviders.Reepay.pdb" />
     </files>
 </package>
