@@ -1,7 +1,6 @@
-﻿using Vendr.Contrib.PaymentProviders.Reepay;
-using Vendr.Core.Web.PaymentProviders;
+﻿using Vendr.Core.Web.PaymentProviders;
 
-namespace Vendr.Contrib.PaymentProviders
+namespace Vendr.Contrib.PaymentProviders.Reepay
 {
     public class ReepayCheckoutOneTimeSettings : ReepaySettingsBase
     {

@@ -1,11 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using Vendr.Contrib.PaymentProviders.Reepay;
 using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 using Vendr.Core;
@@ -14,7 +12,7 @@ using Vendr.Core.Web;
 using Vendr.Core.Web.Api;
 using Vendr.Core.Web.PaymentProviders;
 
-namespace Vendr.Contrib.PaymentProviders
+namespace Vendr.Contrib.PaymentProviders.Reepay
 {
     [PaymentProvider("reepay-checkout-onetime", "Reepay (One Time)", "Reepay payment provider for one time payments")]
     public class ReepayCheckoutOneTimePaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutOneTimeSettings>
