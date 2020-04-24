@@ -99,7 +99,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
-                var data = new ReepaySessionCharge
+                var data = new ReepaySessionChargeRequest
                 {
                     Order = new ReepayOrder
                     {

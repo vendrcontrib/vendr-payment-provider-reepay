@@ -17,7 +17,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             _config = config;
         }
 
-        public ReepaySessionChargeResult CreateSessionCharge(ReepaySessionCharge data)
+        public ReepaySessionChargeResult CreateSessionCharge(ReepaySessionChargeRequest data)
         {
             return Request("/v1/session/charge", true, (req) => req
                 .WithHeader("Content-Type", "application/json")

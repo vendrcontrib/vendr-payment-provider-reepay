@@ -2,7 +2,7 @@
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
-    public class ReepaySessionCharge
+    public class ReepaySessionChargeRequest
     {
         [JsonProperty("configuration")]
         public string Configuration { get; set; }

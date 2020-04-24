@@ -98,7 +98,7 @@
     <Compile Include="Api\Models\ReepayOrder.cs" />
     <Compile Include="ReepayCheckoutOneTimePaymentProvider.cs" />
     <Compile Include="Api\Models\ReepayRefund.cs" />
-    <Compile Include="Api\Models\ReepaySessionCharge.cs" />
+    <Compile Include="Api\Models\ReepaySessionChargeRequest.cs" />
     <Compile Include="ReepayPaymentProviderBase.cs" />
     <Compile Include="ReepayCheckoutOneTimeSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
