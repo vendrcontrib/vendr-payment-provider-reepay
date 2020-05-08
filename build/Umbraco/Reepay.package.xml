@@ -14,9 +14,13 @@
             </requirements>
         </package>
         <author>
-            <name></name>
-            <website></website>
+            <name>Umbraco Community</name>
+            <website>https://vendr.net/docs/</website>
         </author>
+        <contributors>
+          <contributor>Bjarne Fyrstenborg</contributor>
+          <contributor>Matt Brailsford</contributor>
+        </contributors>
         <readme>Reepay payment provider for Vendr, the eCommerce package for Umbrao v8+</readme>
     </info>
     
