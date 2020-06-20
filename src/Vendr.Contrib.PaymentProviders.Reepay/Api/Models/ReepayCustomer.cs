@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
@@ -42,6 +43,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 
         [JsonProperty("generate_handle")]
         public bool GenerateHandle { get; set; }
+
+        [JsonProperty("metadata")]
+        public Dictionary<string, object> MetaData { get; set; }
 
         //[JsonProperty("test")]
         //public bool Test { get; set; }

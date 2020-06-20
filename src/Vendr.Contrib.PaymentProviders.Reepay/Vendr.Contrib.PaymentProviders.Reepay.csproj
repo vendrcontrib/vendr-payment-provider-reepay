@@ -90,6 +90,8 @@
   <ItemGroup>
     <Compile Include="Api\Models\ReepayAddress.cs" />
     <Compile Include="Api\Models\ReepayClientConfig.cs" />
+    <Compile Include="Api\Models\ReepayRecurringSessionRequest.cs" />
+    <Compile Include="Api\Models\ReepaySessionRequestBase.cs" />
     <Compile Include="Api\Models\ReepaySubscription.cs" />
     <Compile Include="Api\ReepayClient.cs" />
     <Compile Include="Properties\VersionInfo.cs" />
