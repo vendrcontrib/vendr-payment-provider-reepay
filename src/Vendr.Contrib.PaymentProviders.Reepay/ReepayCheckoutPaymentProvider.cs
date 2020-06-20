@@ -99,7 +99,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
-                var data = new ReepaySessionChargeRequest
+                var data = new ReepayChargeSessionRequest
                 {
                     Order = new ReepayOrder
                     {
@@ -170,8 +170,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 var clientConfig = GetReepayClientConfig(settings);
                 var client = new ReepayClient(clientConfig);
 
-                // Create session charge
-                var payment = client.CreateSessionCharge(data);
+                // Create charge session
+                var payment = client.CreateChargeSession(data);
 
                 // Get charge session id
                 chargeSessionId = payment.Id;

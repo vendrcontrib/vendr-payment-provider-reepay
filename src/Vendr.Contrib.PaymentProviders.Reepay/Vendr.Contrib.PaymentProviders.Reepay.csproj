@@ -90,15 +90,16 @@
   <ItemGroup>
     <Compile Include="Api\Models\ReepayAddress.cs" />
     <Compile Include="Api\Models\ReepayClientConfig.cs" />
+    <Compile Include="Api\Models\ReepaySubscription.cs" />
     <Compile Include="Api\ReepayClient.cs" />
     <Compile Include="Properties\VersionInfo.cs" />
     <Compile Include="Api\Models\ReepayCharge.cs" />
-    <Compile Include="Api\Models\ReepaySessionChargeResult.cs" />
+    <Compile Include="Api\Models\ReepayChargeSessionResult.cs" />
     <Compile Include="Api\Models\ReepayCustomer.cs" />
     <Compile Include="Api\Models\ReepayOrder.cs" />
     <Compile Include="ReepayCheckoutPaymentProvider.cs" />
     <Compile Include="Api\Models\ReepayRefund.cs" />
-    <Compile Include="Api\Models\ReepaySessionChargeRequest.cs" />
+    <Compile Include="Api\Models\ReepayChargeSessionRequest.cs" />
     <Compile Include="ReepayPaymentProviderBase.cs" />
     <Compile Include="ReepayCheckoutSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

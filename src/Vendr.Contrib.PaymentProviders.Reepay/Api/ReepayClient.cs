@@ -17,12 +17,20 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             _config = config;
         }
 
-        public ReepaySessionChargeResult CreateSessionCharge(ReepaySessionChargeRequest data)
+        public ReepayChargeSessionResult CreateChargeSession(ReepayChargeSessionRequest data)
         {
             return Request("/v1/session/charge", true, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
-                .ReceiveJson<ReepaySessionChargeResult>());
+                .ReceiveJson<ReepayChargeSessionResult>());
+        }
+
+        public ReepayChargeSessionResult CreateRecurringSession(ReepayChargeSessionRequest data)
+        {
+            return Request("/v1/session/recurring", true, (req) => req
+                .WithHeader("Content-Type", "application/json")
+                .PostJsonAsync(data)
+                .ReceiveJson<ReepayChargeSessionResult>());
         }
 
         public ReepayCharge GetCharge(string handle)
@@ -53,6 +61,37 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepayRefund>());
+        }
+
+        public ReepaySubscription CreateSubscription(object data)
+        {
+            return Request($"/v1/subscription", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
+                .PostJsonAsync(data)
+                .ReceiveJson<ReepaySubscription>());
+        }
+
+        public ReepaySubscription GetSubscription(string handle)
+        {
+            return Request($"/v1/subscription/{handle}", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
+                .GetJsonAsync<ReepaySubscription>());
+        }
+
+        public ReepaySubscription CancelSubscription(string handle, object data)
+        {
+            return Request($"/v1/subscription/{handle}/cancel", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
+                .PostJsonAsync(data)
+                .ReceiveJson<ReepaySubscription>());
+        }
+
+        public ReepaySubscription UncancelSubscription(string handle)
+        {
+            return Request($"/v1/subscription/{handle}/uncancel", false, (req) => req
+                .WithHeader("Content-Type", "application/json")
+                .PostJsonAsync(null)
+                .ReceiveJson<ReepaySubscription>());
         }
 
         public Dictionary<string, object> GetInvoiceMetaData(string handle)
