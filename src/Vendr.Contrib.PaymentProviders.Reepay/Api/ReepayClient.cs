@@ -17,20 +17,20 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             _config = config;
         }
 
-        public ReepayChargeSessionResult CreateChargeSession(ReepayChargeSessionRequest data)
+        public ReepaySessionResponse CreateChargeSession(ReepayChargeSessionRequest data)
         {
             return Request("/v1/session/charge", true, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
-                .ReceiveJson<ReepayChargeSessionResult>());
+                .ReceiveJson<ReepaySessionResponse>());
         }
 
-        public ReepayChargeSessionResult CreateRecurringSession(ReepayChargeSessionRequest data)
+        public ReepaySessionResponse CreateRecurringSession(ReepayChargeSessionRequest data)
         {
             return Request("/v1/session/recurring", true, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
-                .ReceiveJson<ReepayChargeSessionResult>());
+                .ReceiveJson<ReepaySessionResponse>());
         }
 
         public ReepayCharge GetCharge(string handle)
