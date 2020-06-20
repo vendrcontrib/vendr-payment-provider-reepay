@@ -30,7 +30,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
         public override bool FinalizeAtContinueUrl => false;
 
         public override IEnumerable<TransactionMetaDataDefinition> TransactionMetaDataDefinitions => new[]{
-            new TransactionMetaDataDefinition("reepayChargeSessionId", "Reepay Charge Session ID"),
+            new TransactionMetaDataDefinition("reepaySessionId", "Reepay Session ID"),
             new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
@@ -93,7 +93,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             string paymentFormLink = string.Empty;
 
-            var chargeSessionId = order.Properties["reepayChargeSessionId"]?.Value;
+            var sessionId = order.Properties["reepaySessionId"]?.Value;
 
             // https://docs.reepay.com/docs/new-web-shop
 
@@ -172,12 +172,14 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                 // Create charge session
                 var payment = client.CreateChargeSession(data);
+                if (payment != null)
+                {
+                    // Get session id
+                    sessionId = payment.Id;
 
-                // Get charge session id
-                chargeSessionId = payment.Id;
-
-                // Get charge session url
-                paymentFormLink = payment.Url;
+                    // Get session url
+                    paymentFormLink = payment.Url;
+                }
             }
             catch (Exception ex)
             {
@@ -188,12 +190,12 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 MetaData = new Dictionary<string, string>
                 {
-                    { "reepayChargeSessionId", chargeSessionId },
+                    { "reepayChargeSessionId", sessionId },
                     { "reepayCustomerHandle", customerHandle }
                 },
                 Form = new PaymentForm(paymentFormLink, FormMethod.Get)
                             .WithJsFile("https://checkout.reepay.com/checkout.js")
-                            .WithJs(@"var rp = new Reepay.WindowCheckout('" + chargeSessionId + "');")
+                            .WithJs(@"var rp = new Reepay.WindowCheckout('" + sessionId + "');")
             };
         }
 
@@ -213,10 +215,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                         AmountAuthorized = order.TotalPrice.Value.WithTax,
                         PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
                     });
-                    //, new Dictionary<string, string>
-                    //{
-                    //   { "reepayWebhookId", reepayEvent.Id }
-                    //});
                 }
             }
             catch (Exception ex)
