@@ -14,10 +14,10 @@ using Vendr.Core.Web.PaymentProviders;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    [PaymentProvider("reepay-checkout-onetime", "Reepay (One Time)", "Reepay payment provider for one time payments")]
-    public class ReepayCheckoutOneTimePaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutOneTimeSettings>
+    [PaymentProvider("reepay-checkout", "Reepay Checkout", "Reepay payment provider for one time payments")]
+    public class ReepayCheckoutPaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutSettings>
     {
-        public ReepayCheckoutOneTimePaymentProvider(VendrContext vendr)
+        public ReepayCheckoutPaymentProvider(VendrContext vendr)
             : base(vendr)
         { }
 
@@ -34,7 +34,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
-        public override OrderReference GetOrderReference(HttpRequestBase request, ReepayCheckoutOneTimeSettings settings)
+        public override OrderReference GetOrderReference(HttpRequestBase request, ReepayCheckoutSettings settings)
         {
             try
             {
@@ -59,13 +59,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - GetOrderReference");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - GetOrderReference");
             }
 
             return base.GetOrderReference(request, settings);
         }
 
-        public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepayCheckoutOneTimeSettings settings)
+        public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepayCheckoutSettings settings)
         {
             var currency = Vendr.Services.CurrencyService.GetCurrency(order.CurrencyId);
             var currencyCode = currency.Code.ToUpperInvariant();
@@ -181,7 +181,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - error creating payment.");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - error creating payment.");
             }
 
             return new PaymentFormResult()
@@ -197,7 +197,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             };
         }
 
-        public override CallbackResult ProcessCallback(OrderReadOnly order, HttpRequestBase request, ReepayCheckoutOneTimeSettings settings)
+        public override CallbackResult ProcessCallback(OrderReadOnly order, HttpRequestBase request, ReepayCheckoutSettings settings)
         {
             try
             {
@@ -221,13 +221,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - ProcessCallback");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - ProcessCallback");
             }
 
             return CallbackResult.BadRequest();
         }
 
-        public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
+        public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepayCheckoutSettings settings)
         {
             // Get charge: https://reference.reepay.com/api/#get-charge
 
@@ -250,13 +250,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - FetchPaymentStatus");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - FetchPaymentStatus");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CancelPayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
+        public override ApiResult CancelPayment(OrderReadOnly order, ReepayCheckoutSettings settings)
         {
             // Cancel charge: https://reference.reepay.com/api/#cancel-charge
 
@@ -279,13 +279,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - CancelPayment");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - CancelPayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CapturePayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
+        public override ApiResult CapturePayment(OrderReadOnly order, ReepayCheckoutSettings settings)
         {
             // Settle charge: https://reference.reepay.com/api/#settle-charge
 
@@ -313,13 +313,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - CapturePayment");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - CapturePayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult RefundPayment(OrderReadOnly order, ReepayCheckoutOneTimeSettings settings)
+        public override ApiResult RefundPayment(OrderReadOnly order, ReepayCheckoutSettings settings)
         {
             // Create refund: https://reference.reepay.com/api/#create-refund
 
@@ -348,7 +348,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutOneTimePaymentProvider>(ex, "Reepay - RefundPayment");
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - RefundPayment");
             }
 
             return ApiResult.Empty;

@@ -2,7 +2,7 @@
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    public class ReepayCheckoutOneTimeSettings : ReepaySettingsBase
+    public class ReepayCheckoutSettings : ReepaySettingsBase
     {
         [PaymentProviderSetting(Name = "Auto Capture",
             Description = "Flag indicating whether to immediately capture the payment, or whether to just authorize the payment for later (manual) capture.",
