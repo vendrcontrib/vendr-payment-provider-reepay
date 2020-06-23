@@ -31,6 +31,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
         public override IEnumerable<TransactionMetaDataDefinition> TransactionMetaDataDefinitions => new[]{
             new TransactionMetaDataDefinition("reepaySessionId", "Reepay Session ID"),
+            new TransactionMetaDataDefinition("reepaySubscriptionId", "Reepay Subscription ID"),
             new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
@@ -80,8 +81,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 ? Vendr.Services.CountryService.GetCountry(order.PaymentInfo.CountryId.Value)
                 : null;
 
-            var orderAmount = AmountToMinorUnits(order.TotalPrice.Value.WithTax).ToString("0", CultureInfo.InvariantCulture);
-
             var paymentMethods = settings.PaymentMethods?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                    .Where(x => !string.IsNullOrWhiteSpace(x))
                    .Select(s => s.Trim())
@@ -99,13 +98,34 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
-                var data = new ReepayChargeSessionRequest
+                var metaData = new Dictionary<string, object>()
+                {
+                    { "orderReference", order.GenerateOrderReference().ToString() }
+                };
+
+                var hasRecurringItems = false;
+                long recurringTotalPrice = 0;
+                long orderTotalPrice = AmountToMinorUnits(order.TotalPrice.Value.WithTax);
+
+                foreach (var orderLine in order.OrderLines.Where(IsRecurringOrderLine))
+                {
+                    var orderLinePrice = AmountToMinorUnits(orderLine.TotalPrice.Value.WithTax);
+
+                    hasRecurringItems = true;
+                }
+
+                if (recurringTotalPrice < orderTotalPrice)
+                {
+
+                }
+
+                var csr = new ReepayChargeSessionRequest
                 {
                     Order = new ReepayOrder
                     {
                         Key = order.GenerateOrderReference(),
                         Handle = order.OrderNumber,
-                        Amount = Convert.ToInt32(orderAmount),
+                        Amount = (int)orderTotalPrice,
                         Currency = currencyCode,
                         Customer = new ReepayCustomer
                         {
@@ -146,11 +166,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                 ? order.Properties[settings.BillingPhonePropertyAlias] : null,
                             Country = billingCountry?.Code
                         },
-                        MetaData = new Dictionary<string, object>()
-                        {
-                            { "orderReference", order.GenerateOrderReference().ToString() }
-                        }
+                        MetaData = metaData
                     },
+                    Recurring = hasRecurringItems,
                     Settle = settings.Capture,
                     AcceptUrl = continueUrl,
                     CancelUrl = cancelUrl
@@ -158,20 +176,62 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                 if (!string.IsNullOrWhiteSpace(settings.Locale))
                 {
-                    data.Locale = settings.Locale;
+                    csr.Locale = settings.Locale;
                 }
 
                 if (paymentMethods?.Length > 0)
                 {
                     // Set payment methods if any exists otherwise omit.
-                    data.PaymentMethods = paymentMethods;
+                    csr.PaymentMethods = paymentMethods;
                 }
+
+                //if (hasRecurringItems)
+                //{
+                //    var rsr = new ReepayRecurringSessionRequest
+                //    {
+                //        Customer = order.CustomerInfo.CustomerReference,
+                //        CreateCustomer = new ReepayCustomer
+                //        {
+                //            Email = order.CustomerInfo.Email,
+                //            Handle = customerHandle,
+                //            FirstName = order.CustomerInfo.FirstName,
+                //            LastName = order.CustomerInfo.LastName,
+                //            Company = !string.IsNullOrWhiteSpace(settings.BillingCompanyPropertyAlias)
+                //                ? order.Properties[settings.BillingCompanyPropertyAlias] : null,
+                //            Address = !string.IsNullOrWhiteSpace(settings.BillingAddressLine1PropertyAlias)
+                //                ? order.Properties[settings.BillingAddressLine1PropertyAlias] : null,
+                //            Address2 = !string.IsNullOrWhiteSpace(settings.BillingAddressLine2PropertyAlias)
+                //                ? order.Properties[settings.BillingAddressLine2PropertyAlias] : null,
+                //            PostalCode = !string.IsNullOrWhiteSpace(settings.BillingAddressZipCodePropertyAlias)
+                //                ? order.Properties[settings.BillingAddressZipCodePropertyAlias] : null,
+                //            City = !string.IsNullOrWhiteSpace(settings.BillingAddressCityPropertyAlias)
+                //                ? order.Properties[settings.BillingAddressCityPropertyAlias] : null,
+                //            Phone = !string.IsNullOrWhiteSpace(settings.BillingPhonePropertyAlias)
+                //                ? order.Properties[settings.BillingPhonePropertyAlias] : null,
+                //            Country = billingCountry?.Code,
+                //            GenerateHandle = string.IsNullOrEmpty(customerHandle)
+                //        },
+                //        AcceptUrl = continueUrl,
+                //        CancelUrl = cancelUrl
+                //    };
+
+                //    if (!string.IsNullOrWhiteSpace(settings.Locale))
+                //    {
+                //        rsr.Locale = settings.Locale;
+                //    }
+
+                //    if (paymentMethods?.Length > 0)
+                //    {
+                //        // Set payment methods if any exists otherwise omit.
+                //        rsr.PaymentMethods = paymentMethods;
+                //    }
+                //}
 
                 var clientConfig = GetReepayClientConfig(settings);
                 var client = new ReepayClient(clientConfig);
 
                 // Create charge session
-                var payment = client.CreateChargeSession(data);
+                var payment = client.CreateChargeSession(csr);
                 if (payment != null)
                 {
                     // Get session id
@@ -190,7 +250,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 MetaData = new Dictionary<string, string>
                 {
-                    { "reepayChargeSessionId", sessionId },
+                    { "reepaySessionId", sessionId },
                     { "reepayCustomerHandle", customerHandle }
                 },
                 Form = new PaymentForm(paymentFormLink, FormMethod.Get)
@@ -214,6 +274,10 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                         TransactionId = reepayEvent.Transaction,
                         AmountAuthorized = order.TotalPrice.Value.WithTax,
                         PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
+                    },
+                    new Dictionary<string, string>
+                    {
+                        { "reepaySubscriptionId", reepayEvent.Subscription }
                     });
                 }
             }
@@ -350,6 +414,14 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
 
             return ApiResult.Empty;
+        }
+
+        private bool IsRecurringOrderLine(OrderLineReadOnly orderLine)
+        {
+            return orderLine.Properties.ContainsKey(Constants.Properties.Product.IsRecurringPropertyAlias)
+                && !string.IsNullOrWhiteSpace(orderLine.Properties[Constants.Properties.Product.IsRecurringPropertyAlias])
+                && (orderLine.Properties[Constants.Properties.Product.IsRecurringPropertyAlias] == "1"
+                    || orderLine.Properties[Constants.Properties.Product.IsRecurringPropertyAlias].Value.Equals("true", StringComparison.OrdinalIgnoreCase));
         }
     }
 }
