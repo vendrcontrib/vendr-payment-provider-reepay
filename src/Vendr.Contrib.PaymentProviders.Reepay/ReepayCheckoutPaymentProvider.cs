@@ -119,7 +119,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                 }
 
-                var csr = new ReepayChargeSessionRequest
+                var checkoutSessionRequest = new ReepayChargeSessionRequest
                 {
                     Order = new ReepayOrder
                     {
@@ -176,13 +176,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                 if (!string.IsNullOrWhiteSpace(settings.Locale))
                 {
-                    csr.Locale = settings.Locale;
+                    checkoutSessionRequest.Locale = settings.Locale;
                 }
 
                 if (paymentMethods?.Length > 0)
                 {
                     // Set payment methods if any exists otherwise omit.
-                    csr.PaymentMethods = paymentMethods;
+                    checkoutSessionRequest.PaymentMethods = paymentMethods;
                 }
 
                 //if (hasRecurringItems)
@@ -230,15 +230,15 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 var clientConfig = GetReepayClientConfig(settings);
                 var client = new ReepayClient(clientConfig);
 
-                // Create charge session
-                var payment = client.CreateChargeSession(csr);
-                if (payment != null)
+                // Create checkout session
+                var checkoutSession = client.CreateChargeSession(checkoutSessionRequest);
+                if (checkoutSession != null)
                 {
                     // Get session id
-                    sessionId = payment.Id;
+                    sessionId = checkoutSession.Id;
 
                     // Get session url
-                    paymentFormLink = payment.Url;
+                    paymentFormLink = checkoutSession.Url;
                 }
             }
             catch (Exception ex)
