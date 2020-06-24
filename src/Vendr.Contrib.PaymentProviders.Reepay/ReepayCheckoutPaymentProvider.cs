@@ -43,9 +43,10 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 if (reepayEvent != null)
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
-                        (reepayEvent.EventType == "invoice_authorized" ||
-                        reepayEvent.EventType == "invoice_settled" ||
-                        reepayEvent.EventType == "subscription_created"))
+                        (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized ||
+                        reepayEvent.EventType == WebhookEventType.InvoiceSettled ||
+                        reepayEvent.EventType == WebhookEventType.SubscriptionCreated ||
+                        reepayEvent.EventType == WebhookEventType.CustomerPaymentMethodAdded))
                     {
                         var clientConfig = GetReepayClientConfig(settings);
                         var client = new ReepayClient(clientConfig);
@@ -270,7 +271,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
-                    if (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled")
+                    if (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || reepayEvent.EventType == WebhookEventType.InvoiceSettled)
                     {
                         var hasRecurringItems = order.OrderLines.Any(IsRecurringOrderLine);
                         if (hasRecurringItems)
@@ -280,8 +281,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                             var data = new
                             {
-                                handle = "s-101",
-                                plan = "plan-f2b88",
+                                handle = "s-101", // Get plan from order line property?
+                                plan = "plan-f2b88", // Get plan from order line property?
                                 signup_method = "source",
                                 customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
                                 source = reepayEvent.PaymentMethod,
@@ -291,15 +292,22 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                 }
                             };
 
-                            // Create subscription
-                            client.CreateSubscription(data);
+                            try
+                            {
+                                // Create subscription
+                                client.CreateSubscription(data);
+                            }
+                            catch (Exception ex)
+                            {
+                                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - Error creating subscription");
+                            }
                         }
 
                         return CallbackResult.Ok(new TransactionInfo
                         {
                             TransactionId = reepayEvent.Transaction,
                             AmountAuthorized = order.TotalPrice.Value.WithTax,
-                            PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
+                            PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
                         },
                         new Dictionary<string, string>
                         {
@@ -307,9 +315,15 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                         });
                     }
 
-                    if (reepayEvent.EventType == "subscription_created")
+                    if (reepayEvent.EventType == WebhookEventType.SubscriptionCreated)
                     {
                         // Subscription created
+
+                    }
+
+                    if (reepayEvent.EventType == WebhookEventType.CustomerPaymentMethodAdded)
+                    {
+                        // Customer Payment Method Added
 
                     }
                 }

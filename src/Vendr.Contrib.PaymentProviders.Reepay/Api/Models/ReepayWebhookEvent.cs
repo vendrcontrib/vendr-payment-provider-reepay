@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
@@ -14,8 +15,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         [JsonProperty("event_id")]
         public string EventId { get; set; }
 
+        [JsonConverter(typeof(StringEnumConverter))]
         [JsonProperty("event_type")]
-        public string EventType { get; set; }
+        public WebhookEventType EventType { get; set; }
 
         [JsonProperty("timestamp")]
         public DateTime Timestamp { get; set; }
