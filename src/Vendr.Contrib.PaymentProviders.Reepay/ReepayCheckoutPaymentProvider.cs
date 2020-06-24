@@ -45,8 +45,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
                         (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized ||
                         reepayEvent.EventType == WebhookEventType.InvoiceSettled ||
-                        reepayEvent.EventType == WebhookEventType.SubscriptionCreated ||
-                        reepayEvent.EventType == WebhookEventType.CustomerPaymentMethodAdded))
+                        reepayEvent.EventType == WebhookEventType.SubscriptionCreated))
                     {
                         var clientConfig = GetReepayClientConfig(settings);
                         var client = new ReepayClient(clientConfig);
@@ -290,7 +289,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                     plan = "plan-f2b88", // Get plan from order line property?
                                     signup_method = "source",
                                     customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
-                                    source = charge.Source.Card, //reepayEvent.PaymentMethod,
+                                    source = charge.RecurringPaymentMethod, //reepayEvent.PaymentMethod,
                                     metadata = new
                                     {
                                         orderReference = order.GenerateOrderReference().ToString()
@@ -324,12 +323,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     if (reepayEvent.EventType == WebhookEventType.SubscriptionCreated)
                     {
                         // Subscription created
-
-                    }
-
-                    if (reepayEvent.EventType == WebhookEventType.CustomerPaymentMethodAdded)
-                    {
-                        // Customer Payment Method Added
 
                     }
                 }

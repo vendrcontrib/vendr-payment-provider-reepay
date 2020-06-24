@@ -47,13 +47,22 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         [JsonProperty("processing")]
         public bool Processing { get; set; }
 
-        [JsonProperty("source")]
-        public ReepaySource Source { get; set; }
-
         [JsonProperty("refunded_amount")]
         public int RefundedAmount { get; set; }
 
         [JsonProperty("authorized_amount")]
         public int AuthorizedAmount { get; set; }
+
+        [JsonProperty("recurring_payment_method")]
+        public string RecurringPaymentMethod { get; set; }
+
+        [JsonProperty("source")]
+        public ReepaySource Source { get; set; }
+
+        [JsonProperty("billing_address")]
+        public ReepayAddress BillingAddress { get; set; }
+
+        [JsonProperty("shipping_address")]
+        public ReepayAddress ShippingAddress { get; set; }
     }
 }
