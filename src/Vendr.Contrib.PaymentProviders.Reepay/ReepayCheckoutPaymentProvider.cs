@@ -285,7 +285,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                             {
                                 var data = new
                                 {
-                                    handle = "s-101", // Get plan from order line property?
+                                    handle = order.OrderNumber, //"s-101", // Get plan from order line property?
                                     plan = "plan-f2b88", // Get plan from order line property?
                                     signup_method = "source",
                                     customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
