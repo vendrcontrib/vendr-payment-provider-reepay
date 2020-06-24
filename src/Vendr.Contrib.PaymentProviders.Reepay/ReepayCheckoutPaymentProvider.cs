@@ -43,7 +43,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 if (reepayEvent != null)
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
-                        (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
+                        (reepayEvent.EventType == "invoice_authorized" ||
+                        reepayEvent.EventType == "invoice_settled" ||
+                        reepayEvent.EventType == "subscription_created"))
                     {
                         var clientConfig = GetReepayClientConfig(settings);
                         var client = new ReepayClient(clientConfig);
@@ -266,19 +268,50 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 // Process callback
 
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
-
-                if (reepayEvent != null && (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
+                if (reepayEvent != null)
                 {
-                    return CallbackResult.Ok(new TransactionInfo
+                    if (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled")
                     {
-                        TransactionId = reepayEvent.Transaction,
-                        AmountAuthorized = order.TotalPrice.Value.WithTax,
-                        PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
-                    },
-                    new Dictionary<string, string>
+                        var hasRecurringItems = order.OrderLines.Any(IsRecurringOrderLine);
+                        if (hasRecurringItems)
+                        {
+                            var clientConfig = GetReepayClientConfig(settings);
+                            var client = new ReepayClient(clientConfig);
+
+                            var data = new
+                            {
+                                handle = "s-101",
+                                plan = "plan-f2b88",
+                                signup_method = "source",
+                                customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
+                                source = reepayEvent.PaymentMethod,
+                                metadata = new
+                                {
+                                    orderReference = order.GenerateOrderReference().ToString()
+                                }
+                            };
+
+                            // Create subscription
+                            client.CreateSubscription(data);
+                        }
+
+                        return CallbackResult.Ok(new TransactionInfo
+                        {
+                            TransactionId = reepayEvent.Transaction,
+                            AmountAuthorized = order.TotalPrice.Value.WithTax,
+                            PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
+                        },
+                        new Dictionary<string, string>
+                        {
+                            { "reepaySubscriptionId", reepayEvent.Subscription }
+                        });
+                    }
+
+                    if (reepayEvent.EventType == "subscription_created")
                     {
-                        { "reepaySubscriptionId", reepayEvent.Subscription }
-                    });
+                        // Subscription created
+
+                    }
                 }
             }
             catch (Exception ex)
