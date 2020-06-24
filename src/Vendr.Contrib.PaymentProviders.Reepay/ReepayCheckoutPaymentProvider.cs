@@ -268,6 +268,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 // Process callback
 
+                var paymentMethod = request["payment_method"];
+
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
@@ -279,27 +281,31 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                             var clientConfig = GetReepayClientConfig(settings);
                             var client = new ReepayClient(clientConfig);
 
-                            var data = new
+                            var charge = client.GetCharge(order.OrderNumber);
+                            if (charge != null)
                             {
-                                handle = "s-101", // Get plan from order line property?
-                                plan = "plan-f2b88", // Get plan from order line property?
-                                signup_method = "source",
-                                customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
-                                source = reepayEvent.PaymentMethod,
-                                metadata = new
+                                var data = new
                                 {
-                                    orderReference = order.GenerateOrderReference().ToString()
-                                }
-                            };
+                                    handle = "s-101", // Get plan from order line property?
+                                    plan = "plan-f2b88", // Get plan from order line property?
+                                    signup_method = "source",
+                                    customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
+                                    source = charge.Source.Card, //reepayEvent.PaymentMethod,
+                                    metadata = new
+                                    {
+                                        orderReference = order.GenerateOrderReference().ToString()
+                                    }
+                                };
 
-                            try
-                            {
-                                // Create subscription
-                                client.CreateSubscription(data);
-                            }
-                            catch (Exception ex)
-                            {
-                                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - Error creating subscription");
+                                try
+                                {
+                                    // Create subscription
+                                    client.CreateSubscription(data);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - Error creating subscription");
+                                }
                             }
                         }
 

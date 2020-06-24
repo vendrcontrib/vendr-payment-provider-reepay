@@ -47,6 +47,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         [JsonProperty("processing")]
         public bool Processing { get; set; }
 
+        [JsonProperty("source")]
+        public ReepaySource Source { get; set; }
+
         [JsonProperty("refunded_amount")]
         public int RefundedAmount { get; set; }
 
