@@ -250,17 +250,20 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                             var charge = client.GetCharge(order.OrderNumber);
                             if (charge != null)
                             {
-                                var data = new
+                                var metaData = new Dictionary<string, object>()
                                 {
-                                    handle = order.OrderNumber, //"s-101", // Get plan from order line property?
-                                    plan = "plan-f2b88", // Get plan from order line property?
-                                    signup_method = "source",
-                                    customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
-                                    source = charge.RecurringPaymentMethod, //reepayEvent.PaymentMethod,
-                                    metadata = new
-                                    {
-                                        orderReference = order.GenerateOrderReference().ToString()
-                                    }
+                                    { "orderReference", order.GenerateOrderReference().ToString() }
+                                };
+
+                                var data = new ReepaySubscriptionRequest
+                                {
+                                    Handle = $"s-{order.OrderNumber}", //"s-101", // Get plan from order line property?
+                                    Plan = "plan-f2b88", // Get plan from order line property?
+                                    SignupMethod = SignupMethod.Source,
+                                    Customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
+                                    Source = charge.RecurringPaymentMethod, //reepayEvent.PaymentMethod,
+                                    GenerateHandle = false,
+                                    MetaData = metaData
                                 };
 
                                 try

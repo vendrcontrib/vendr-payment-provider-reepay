@@ -97,6 +97,8 @@
     <Compile Include="Api\Models\ReepaySessionRequestBase.cs" />
     <Compile Include="Api\Models\ReepaySource.cs" />
     <Compile Include="Api\Models\ReepaySubscription.cs" />
+    <Compile Include="Api\Models\ReepaySubscriptionRequest.cs" />
+    <Compile Include="Api\Models\SignupMethod.cs" />
     <Compile Include="Api\Models\WebhookEventType.cs" />
     <Compile Include="Api\ReepayClient.cs" />
     <Compile Include="Properties\VersionInfo.cs" />
