@@ -99,6 +99,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
+                var metaData = new Dictionary<string, object>()
+                {
+                    { "orderReference", order.GenerateOrderReference().ToString() }
+                };
+
                 var checkoutSessionRequest = new ReepayChargeSessionRequest
                 {
                     Order = new ReepayOrder
@@ -146,10 +151,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                 ? order.Properties[settings.BillingPhonePropertyAlias] : null,
                             Country = billingCountry?.Code
                         },
-                        MetaData = new Dictionary<string, object>()
-                        {
-                            { "orderReference", order.GenerateOrderReference().ToString() }
-                        }
+                        MetaData = metaData
                     },
                     Settle = settings.Capture,
                     AcceptUrl = continueUrl,
