@@ -260,7 +260,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                 {
                                     var data = new ReepaySubscriptionRequest
                                     {
-                                        Handle = $"s-{order.OrderNumber}", //"s-101", // Get plan from order line property?
+                                        Handle = $"S-{order.OrderNumber}", //"s-101", // Get plan from order line property?
                                         Plan = orderLine.Properties["reepayPlanHandle"],
                                         SignupMethod = SignupMethod.Source,
                                         Customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
