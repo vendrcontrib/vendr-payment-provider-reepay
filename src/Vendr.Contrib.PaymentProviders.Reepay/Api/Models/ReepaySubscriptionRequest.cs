@@ -56,6 +56,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         public bool ConditionalCreate { get; set; }
 
         [JsonProperty("metadata")]
-        public Dictionary<string, object> MetaData { get; set; }
+        public Dictionary<string, string> MetaData { get; set; }
     }
 }

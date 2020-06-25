@@ -27,6 +27,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         public ReepayAddress ShippingAddress { get; set; }
 
         [JsonProperty("metadata")]
-        public Dictionary<string, object> MetaData { get; set; }
+        public Dictionary<string, string> MetaData { get; set; }
     }
 }

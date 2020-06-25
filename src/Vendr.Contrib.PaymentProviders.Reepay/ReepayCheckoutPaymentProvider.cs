@@ -67,9 +67,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
-                var metaData = new Dictionary<string, object>()
+                var metaData = new Dictionary<string, string>()
                 {
-                    { "orderReference", order.GenerateOrderReference().ToString() }
+                    { "orderReference", order.GenerateOrderReference() }
                 };
 
                 var hasRecurringItems = false;
@@ -250,9 +250,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                             var charge = client.GetCharge(order.OrderNumber);
                             if (charge != null)
                             {
-                                var metaData = new Dictionary<string, object>()
+                                var metaData = new Dictionary<string, string>()
                                 {
-                                    { "orderReference", order.GenerateOrderReference().ToString() }
+                                    { "orderReference", order.GenerateOrderReference() }
                                 };
 
                                 var data = new ReepaySubscriptionRequest

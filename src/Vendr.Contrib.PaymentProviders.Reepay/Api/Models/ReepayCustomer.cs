@@ -45,7 +45,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
         public bool GenerateHandle { get; set; }
 
         [JsonProperty("metadata")]
-        public Dictionary<string, object> MetaData { get; set; }
+        public Dictionary<string, string> MetaData { get; set; }
 
         //[JsonProperty("test")]
         //public bool Test { get; set; }
