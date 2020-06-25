@@ -239,6 +239,8 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 {
                     if (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || reepayEvent.EventType == WebhookEventType.InvoiceSettled)
                     {
+                        var transactionMetaData = new Dictionary<string, string>();
+
                         var hasRecurringItems = order.OrderLines.Any(IsRecurringOrderLine);
                         if (hasRecurringItems)
                         {
@@ -272,7 +274,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                     try
                                     {
                                         // Create subscription
-                                        client.CreateSubscription(data);
+                                        var subscription = client.CreateSubscription(data);
+                                        if (subscription != null)
+                                        {
+                                            transactionMetaData.Add("reepaySubscriptionHandle", subscription.Handle);
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
@@ -287,11 +293,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                             TransactionId = reepayEvent.Transaction,
                             AmountAuthorized = order.TotalPrice.Value.WithTax,
                             PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
-                        },
-                        new Dictionary<string, string>
-                        {
-                            { "reepaySubscriptionId", reepayEvent.Subscription }
-                        });
+                        }, transactionMetaData);
                     }
 
                     if (reepayEvent.EventType == WebhookEventType.SubscriptionCreated)
