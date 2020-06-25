@@ -234,8 +234,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 // Process callback
 
-                var paymentMethod = request["payment_method"];
-
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
                 if (reepayEvent != null)
                 {
