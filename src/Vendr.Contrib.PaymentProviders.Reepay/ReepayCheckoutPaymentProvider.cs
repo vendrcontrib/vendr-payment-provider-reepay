@@ -255,25 +255,31 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                                     { "orderReference", order.GenerateOrderReference() }
                                 };
 
-                                var data = new ReepaySubscriptionRequest
+                                var orderLine = order.OrderLines.FirstOrDefault(x => IsRecurringOrderLine(x) && x.Properties.ContainsKey("reepayPlanHandle") && !string.IsNullOrWhiteSpace(x.Properties["reepayPlanHandle"]));
+                                if (orderLine != null)
                                 {
-                                    Handle = $"s-{order.OrderNumber}", //"s-101", // Get plan from order line property?
-                                    Plan = "plan-f2b88", // Get plan from order line property?
-                                    SignupMethod = SignupMethod.Source,
-                                    Customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
-                                    Source = charge.RecurringPaymentMethod, //reepayEvent.PaymentMethod,
-                                    GenerateHandle = false,
-                                    MetaData = metaData
-                                };
+                                    var data = new ReepaySubscriptionRequest
+                                    {
+                                        Handle = $"s-{order.OrderNumber}", //"s-101", // Get plan from order line property?
+                                        Plan = orderLine.Properties["reepayPlanHandle"],
+                                        SignupMethod = SignupMethod.Source,
+                                        Customer = reepayEvent.Customer, //order.CustomerInfo.CustomerReference,
+                                        Source = charge.RecurringPaymentMethod, //reepayEvent.PaymentMethod,
+                                        GenerateHandle = false,
+                                        MetaData = metaData,
+                                        StartDate = orderLine.Properties["reepayStartDate"],
+                                        EndDate = orderLine.Properties["reepayEndDate"]
+                                    };
 
-                                try
-                                {
-                                    // Create subscription
-                                    client.CreateSubscription(data);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - Error creating subscription");
+                                    try
+                                    {
+                                        // Create subscription
+                                        client.CreateSubscription(data);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - Error creating subscription");
+                                    }
                                 }
                             }
                         }
