@@ -99,9 +99,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
             try
             {
-                var metaData = new Dictionary<string, object>()
+                var metaData = new Dictionary<string, string>()
                 {
-                    { "orderReference", order.GenerateOrderReference().ToString() }
+                    { "orderReference", order.GenerateOrderReference() },
+                    { "orderId", order.Id.ToString("D") },
+                    { "orderNumber", order.OrderNumber }
                 };
 
                 var checkoutSessionRequest = new ReepayChargeSessionRequest
