@@ -52,5 +52,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 
         [JsonProperty("authorized_amount")]
         public int AuthorizedAmount { get; set; }
+
+        [JsonProperty("billing_address")]
+        public ReepayAddress BillingAddress { get; set; }
+
+        [JsonProperty("shipping_address")]
+        public ReepayAddress ShippingAddress { get; set; }
     }
 }
