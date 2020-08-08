@@ -49,7 +49,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 ? Vendr.Services.CountryService.GetCountry(order.PaymentInfo.CountryId.Value)
                 : null;
 
-            var orderAmount = AmountToMinorUnits(order.TotalPrice.Value.WithTax).ToString("0", CultureInfo.InvariantCulture);
+            var orderAmount = AmountToMinorUnits(order.TotalPrice.Value.WithTax);
 
             var paymentMethods = settings.PaymentMethods?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                    .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -81,7 +81,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     {
                         Key = order.GenerateOrderReference(),
                         Handle = order.OrderNumber,
-                        Amount = Convert.ToInt32(orderAmount),
+                        Amount = (int)orderAmount,
                         Currency = currencyCode,
                         Customer = new ReepayCustomer
                         {
