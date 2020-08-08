@@ -91,7 +91,12 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 return PaymentStatus.Authorized;
 
             if (charge.State == "settled")
+            {
+                if (charge.RefundedAmount > 0)
+                    return PaymentStatus.Refunded;
+
                 return PaymentStatus.Captured;
+            }
 
             if (charge.State == "failed")
                 return PaymentStatus.Error;
