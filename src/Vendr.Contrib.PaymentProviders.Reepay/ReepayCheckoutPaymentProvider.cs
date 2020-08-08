@@ -194,7 +194,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 MetaData = new Dictionary<string, string>
                 {
-                    { "reepayChargeSessionId", sessionId },
+                    { "reepaySessionId", sessionId },
                     { "reepayCustomerHandle", customerHandle }
                 },
                 Form = new PaymentForm(paymentFormLink, FormMethod.Get)
