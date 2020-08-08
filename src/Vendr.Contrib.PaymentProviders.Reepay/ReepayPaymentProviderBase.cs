@@ -5,6 +5,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
 using Vendr.Core;
 using Vendr.Core.Models;
@@ -42,6 +43,39 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             settings.ErrorUrl.MustNotBeNull("settings.ErrorUrl");
 
             return settings.ErrorUrl;
+        }
+
+        public override OrderReference GetOrderReference(HttpRequestBase request, TSettings settings)
+        {
+            try
+            {
+                var reepayEvent = GetReepayWebhookEvent(request, settings);
+                if (reepayEvent != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) &&
+                        (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized ||
+                         reepayEvent.EventType == WebhookEventType.InvoiceSettled))
+                    {
+                        var clientConfig = GetReepayClientConfig(settings);
+                        var client = new ReepayClient(clientConfig);
+                        var metadata = client.GetInvoiceMetaData(reepayEvent.Invoice);
+                        if (metadata != null)
+                        {
+                            if (metadata.TryGetValue("orderReference", out object orderReference))
+                            {
+                                return OrderReference.Parse(orderReference.ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - GetOrderReference");
+                //Vendr.Log.Error<ReepayPaymentProviderBase<TSettings>>(ex, "Reepay - GetOrderReference");
+            }
+
+            return base.GetOrderReference(request, settings);
         }
 
         protected PaymentStatus GetPaymentStatus(ReepayCharge charge)

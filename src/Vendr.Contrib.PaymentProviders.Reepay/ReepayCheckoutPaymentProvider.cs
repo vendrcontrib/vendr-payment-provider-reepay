@@ -34,37 +34,6 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
-        public override OrderReference GetOrderReference(HttpRequestBase request, ReepayCheckoutSettings settings)
-        {
-            try
-            {
-                var reepayEvent = GetReepayWebhookEvent(request, settings);
-                if (reepayEvent != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) && 
-                        (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
-                    {
-                        var clientConfig = GetReepayClientConfig(settings);
-                        var client = new ReepayClient(clientConfig);
-                        var metadata = client.GetInvoiceMetaData(reepayEvent.Invoice);
-                        if (metadata != null)
-                        {
-                            if (metadata.TryGetValue("orderReference", out object orderReference))
-                            {
-                                return OrderReference.Parse(orderReference.ToString());
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - GetOrderReference");
-            }
-
-            return base.GetOrderReference(request, settings);
-        }
-
         public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepayCheckoutSettings settings)
         {
             var currency = Vendr.Services.CurrencyService.GetCurrency(order.CurrencyId);
@@ -211,13 +180,13 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
 
                 var reepayEvent = GetReepayWebhookEvent(request, settings);
 
-                if (reepayEvent != null && (reepayEvent.EventType == "invoice_authorized" || reepayEvent.EventType == "invoice_settled"))
+                if (reepayEvent != null && (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || reepayEvent.EventType == WebhookEventType.InvoiceSettled))
                 {
                     return CallbackResult.Ok(new TransactionInfo
                     {
                         TransactionId = reepayEvent.Transaction,
                         AmountAuthorized = order.TotalPrice.Value.WithTax,
-                        PaymentStatus = reepayEvent.EventType == "invoice_settled" ? PaymentStatus.Captured : PaymentStatus.Authorized
+                        PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
                     });
                 }
             }
