@@ -185,7 +185,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     return CallbackResult.Ok(new TransactionInfo
                     {
                         TransactionId = reepayEvent.Transaction,
-                        AmountAuthorized = order.TotalPrice.Value.WithTax,
+                        AmountAuthorized = order.TransactionAmount.Value,
                         PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
                     });
                 }
