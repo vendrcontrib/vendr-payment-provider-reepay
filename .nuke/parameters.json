@@ -1,4 +1,4 @@
 {
   "$schema": "./build.schema.json",
-  "Solution": "Vendr.PaymentProviders.Reepay.sln"
+  "Solution": "Vendr.Contrib.PaymentProviders.Reepay.sln"
 }
