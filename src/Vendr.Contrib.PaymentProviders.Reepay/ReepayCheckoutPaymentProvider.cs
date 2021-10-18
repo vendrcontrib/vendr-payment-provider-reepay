@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+using System.Threading.Tasks;
+using Vendr.Common.Logging;
 using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
-using Vendr.Core;
+using Vendr.Core.Api;
 using Vendr.Core.Models;
-using Vendr.Core.Web;
-using Vendr.Core.Web.Api;
-using Vendr.Core.Web.PaymentProviders;
+using Vendr.Core.PaymentProviders;
+using Vendr.Extensions;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
     [PaymentProvider("reepay-checkout", "Reepay Checkout", "Reepay payment provider for one time payments")]
-    public class ReepayCheckoutPaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutSettings>
+    public class ReepayCheckoutPaymentProvider : ReepayPaymentProviderBase<ReepayCheckoutPaymentProvider, ReepayCheckoutSettings>
     {
-        public ReepayCheckoutPaymentProvider(VendrContext vendr)
-            : base(vendr)
+        public ReepayCheckoutPaymentProvider(VendrContext vendr, ILogger<ReepayCheckoutPaymentProvider> logger)
+            : base(vendr, logger)
         { }
 
         public override bool CanCancelPayments => true;
@@ -34,9 +32,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             new TransactionMetaDataDefinition("reepayCustomerHandle", "Reepay Customer Handle")
         };
 
-        public override PaymentFormResult GenerateForm(OrderReadOnly order, string continueUrl, string cancelUrl, string callbackUrl, ReepayCheckoutSettings settings)
+        public override async Task<PaymentFormResult> GenerateFormAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
-            var currency = Vendr.Services.CurrencyService.GetCurrency(order.CurrencyId);
+            var currency = Vendr.Services.CurrencyService.GetCurrency(ctx.Order.CurrencyId);
             var currencyCode = currency.Code.ToUpperInvariant();
 
             // Ensure currency has valid ISO 4217 code
@@ -45,24 +43,24 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 throw new Exception("Currency must be a valid ISO 4217 currency code: " + currency.Name);
             }
 
-            var billingCountry = order.PaymentInfo.CountryId.HasValue
-                ? Vendr.Services.CountryService.GetCountry(order.PaymentInfo.CountryId.Value)
+            var billingCountry = ctx.Order.PaymentInfo.CountryId.HasValue
+                ? Vendr.Services.CountryService.GetCountry(ctx.Order.PaymentInfo.CountryId.Value)
                 : null;
 
-            var orderAmount = AmountToMinorUnits(order.TransactionAmount.Value);
+            var orderAmount = AmountToMinorUnits(ctx.Order.TransactionAmount.Value);
 
-            var paymentMethods = settings.PaymentMethods?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            var paymentMethods = ctx.Settings.PaymentMethods?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                    .Where(x => !string.IsNullOrWhiteSpace(x))
                    .Select(s => s.Trim())
                    .ToArray();
 
-            var customerHandle = !string.IsNullOrEmpty(order.CustomerInfo.CustomerReference)
-                                        ? order.CustomerInfo.CustomerReference
+            var customerHandle = !string.IsNullOrEmpty(ctx.Order.CustomerInfo.CustomerReference)
+                                        ? ctx.Order.CustomerInfo.CustomerReference
                                         : Guid.NewGuid().ToString();
 
             string paymentFormLink = string.Empty;
 
-            var sessionId = order.Properties["reepaySessionId"]?.Value;
+            var sessionId = ctx.Order.Properties["reepaySessionId"]?.Value;
 
             // https://docs.reepay.com/docs/new-web-shop
 
@@ -70,68 +68,68 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 var metaData = new Dictionary<string, string>()
                 {
-                    { "orderReference", order.GenerateOrderReference() },
-                    { "orderId", order.Id.ToString("D") },
-                    { "orderNumber", order.OrderNumber }
+                    { "orderReference", ctx.Order.GenerateOrderReference() },
+                    { "orderId", ctx.Order.Id.ToString("D") },
+                    { "orderNumber", ctx.Order.OrderNumber }
                 };
 
                 var checkoutSessionRequest = new ReepayChargeSessionRequest
                 {
                     Order = new ReepayOrder
                     {
-                        Key = order.GenerateOrderReference(),
-                        Handle = order.OrderNumber,
+                        Key = ctx.Order.GenerateOrderReference(),
+                        Handle = ctx.Order.OrderNumber,
                         Amount = (int)orderAmount,
                         Currency = currencyCode,
                         Customer = new ReepayCustomer
                         {
-                            Email = order.CustomerInfo.Email,
+                            Email = ctx.Order.CustomerInfo.Email,
                             Handle = customerHandle,
-                            FirstName = order.CustomerInfo.FirstName,
-                            LastName = order.CustomerInfo.LastName,
-                            Company = !string.IsNullOrWhiteSpace(settings.BillingCompanyPropertyAlias)
-                                ? order.Properties[settings.BillingCompanyPropertyAlias] : null,
-                            Address = !string.IsNullOrWhiteSpace(settings.BillingAddressLine1PropertyAlias)
-                                ? order.Properties[settings.BillingAddressLine1PropertyAlias] : null,
-                            Address2 = !string.IsNullOrWhiteSpace(settings.BillingAddressLine2PropertyAlias)
-                                ? order.Properties[settings.BillingAddressLine2PropertyAlias] : null,
-                            PostalCode = !string.IsNullOrWhiteSpace(settings.BillingAddressZipCodePropertyAlias)
-                                ? order.Properties[settings.BillingAddressZipCodePropertyAlias] : null,
-                            City = !string.IsNullOrWhiteSpace(settings.BillingAddressCityPropertyAlias)
-                                ? order.Properties[settings.BillingAddressCityPropertyAlias] : null,
-                            Phone = !string.IsNullOrWhiteSpace(settings.BillingPhonePropertyAlias)
-                                ? order.Properties[settings.BillingPhonePropertyAlias] : null,
+                            FirstName = ctx.Order.CustomerInfo.FirstName,
+                            LastName = ctx.Order.CustomerInfo.LastName,
+                            Company = !string.IsNullOrWhiteSpace(ctx.Settings.BillingCompanyPropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingCompanyPropertyAlias] : null,
+                            Address = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressLine1PropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressLine1PropertyAlias] : null,
+                            Address2 = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressLine2PropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressLine2PropertyAlias] : null,
+                            PostalCode = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressZipCodePropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressZipCodePropertyAlias] : null,
+                            City = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressCityPropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressCityPropertyAlias] : null,
+                            Phone = !string.IsNullOrWhiteSpace(ctx.Settings.BillingPhonePropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingPhonePropertyAlias] : null,
                             Country = billingCountry?.Code,
                             GenerateHandle = string.IsNullOrEmpty(customerHandle)
                         },
                         BillingAddress = new ReepayAddress
                         {
-                            FirstName = order.CustomerInfo.FirstName,
-                            LastName = order.CustomerInfo.LastName,
-                            Company = !string.IsNullOrWhiteSpace(settings.BillingCompanyPropertyAlias)
-                                ? order.Properties[settings.BillingCompanyPropertyAlias] : null,
-                            Address = !string.IsNullOrWhiteSpace(settings.BillingAddressLine1PropertyAlias)
-                                ? order.Properties[settings.BillingAddressLine1PropertyAlias] : null,
-                            Address2 = !string.IsNullOrWhiteSpace(settings.BillingAddressLine2PropertyAlias)
-                                ? order.Properties[settings.BillingAddressLine2PropertyAlias] : null,
-                            PostalCode = !string.IsNullOrWhiteSpace(settings.BillingAddressZipCodePropertyAlias)
-                                ? order.Properties[settings.BillingAddressZipCodePropertyAlias] : null,
-                            City = !string.IsNullOrWhiteSpace(settings.BillingAddressCityPropertyAlias)
-                                ? order.Properties[settings.BillingAddressCityPropertyAlias] : null,
-                            Phone = !string.IsNullOrWhiteSpace(settings.BillingPhonePropertyAlias)
-                                ? order.Properties[settings.BillingPhonePropertyAlias] : null,
+                            FirstName = ctx.Order.CustomerInfo.FirstName,
+                            LastName = ctx.Order.CustomerInfo.LastName,
+                            Company = !string.IsNullOrWhiteSpace(ctx.Settings.BillingCompanyPropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingCompanyPropertyAlias] : null,
+                            Address = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressLine1PropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressLine1PropertyAlias] : null,
+                            Address2 = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressLine2PropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressLine2PropertyAlias] : null,
+                            PostalCode = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressZipCodePropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressZipCodePropertyAlias] : null,
+                            City = !string.IsNullOrWhiteSpace(ctx.Settings.BillingAddressCityPropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingAddressCityPropertyAlias] : null,
+                            Phone = !string.IsNullOrWhiteSpace(ctx.Settings.BillingPhonePropertyAlias)
+                                ? ctx.Order.Properties[ctx.Settings.BillingPhonePropertyAlias] : null,
                             Country = billingCountry?.Code
                         },
                         MetaData = metaData
                     },
-                    Settle = settings.Capture,
-                    AcceptUrl = continueUrl,
-                    CancelUrl = cancelUrl
+                    Settle = ctx.Settings.Capture,
+                    AcceptUrl = ctx.Urls.ContinueUrl,
+                    CancelUrl = ctx.Urls.CancelUrl
                 };
 
-                if (!string.IsNullOrWhiteSpace(settings.Locale))
+                if (!string.IsNullOrWhiteSpace(ctx.Settings.Locale))
                 {
-                    checkoutSessionRequest.Locale = settings.Locale;
+                    checkoutSessionRequest.Locale = ctx.Settings.Locale;
                 }
 
                 if (paymentMethods?.Length > 0)
@@ -140,11 +138,11 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     checkoutSessionRequest.PaymentMethods = paymentMethods;
                 }
 
-                var clientConfig = GetReepayClientConfig(settings);
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
                 var client = new ReepayClient(clientConfig);
 
                 // Create checkout session
-                var checkoutSession = client.CreateChargeSession(checkoutSessionRequest);
+                var checkoutSession = await client.CreateChargeSessionAsync(checkoutSessionRequest);
                 if (checkoutSession != null)
                 {
                     // Get session id
@@ -156,7 +154,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - error creating payment.");
+                _logger.Error(ex, "Reepay - error creating payment.");
             }
 
             return new PaymentFormResult()
@@ -166,49 +164,49 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     { "reepaySessionId", sessionId },
                     { "reepayCustomerHandle", customerHandle }
                 },
-                Form = new PaymentForm(paymentFormLink, FormMethod.Get)
+                Form = new PaymentForm(paymentFormLink, PaymentFormMethod.Get)
                             .WithJsFile("https://checkout.reepay.com/checkout.js")
                             .WithJs(@"var rp = new Reepay.WindowCheckout('" + sessionId + "');")
             };
         }
 
-        public override CallbackResult ProcessCallback(OrderReadOnly order, HttpRequestBase request, ReepayCheckoutSettings settings)
+        public override async Task<CallbackResult> ProcessCallbackAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
             try
             {
                 // Process callback
 
-                var reepayEvent = GetReepayWebhookEvent(request, settings);
+                var reepayEvent = await GetReepayWebhookEventAsync(ctx);
 
                 if (reepayEvent != null && (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || reepayEvent.EventType == WebhookEventType.InvoiceSettled))
                 {
                     return CallbackResult.Ok(new TransactionInfo
                     {
                         TransactionId = reepayEvent.Transaction,
-                        AmountAuthorized = order.TransactionAmount.Value,
+                        AmountAuthorized = ctx.Order.TransactionAmount.Value,
                         PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
                     });
                 }
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - ProcessCallback");
+                _logger.Error(ex, "Reepay - ProcessCallback");
             }
 
             return CallbackResult.BadRequest();
         }
 
-        public override ApiResult FetchPaymentStatus(OrderReadOnly order, ReepayCheckoutSettings settings)
+        public override async Task<ApiResult> FetchPaymentStatusAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
             // Get charge: https://reference.reepay.com/api/#get-charge
 
             try
             {
-                var clientConfig = GetReepayClientConfig(settings);
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
                 var client = new ReepayClient(clientConfig);
 
                 // Get charge
-                var payment = client.GetCharge(order.OrderNumber);
+                var payment = await client.GetChargeAsync(ctx.Order.OrderNumber);
 
                 return new ApiResult()
                 {
@@ -221,23 +219,23 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - FetchPaymentStatus");
+                _logger.Error(ex, "Reepay - FetchPaymentStatus");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CancelPayment(OrderReadOnly order, ReepayCheckoutSettings settings)
+        public override async Task<ApiResult> CancelPaymentAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
             // Cancel charge: https://reference.reepay.com/api/#cancel-charge
 
             try
             {
-                var clientConfig = GetReepayClientConfig(settings);
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
                 var client = new ReepayClient(clientConfig);
 
                 // Cancel charge
-                var payment = client.CancelCharge(order.OrderNumber);
+                var payment = await client.CancelChargeAsync(ctx.Order.OrderNumber);
 
                 return new ApiResult()
                 {
@@ -250,28 +248,28 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - CancelPayment");
+                _logger.Error(ex, "Reepay - CancelPayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult CapturePayment(OrderReadOnly order, ReepayCheckoutSettings settings)
+        public override async Task<ApiResult> CapturePaymentAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
             // Settle charge: https://reference.reepay.com/api/#settle-charge
 
             try
             {
-                var clientConfig = GetReepayClientConfig(settings);
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
                 var client = new ReepayClient(clientConfig);
 
                 var data = new
                 {
-                    amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
+                    amount = AmountToMinorUnits(ctx.Order.TransactionInfo.AmountAuthorized.Value)
                 };
 
                 // Settle charge
-                var payment = client.SettleCharge(order.OrderNumber, data);
+                var payment = await client.SettleChargeAsync(ctx.Order.OrderNumber, data);
 
                 return new ApiResult()
                 {
@@ -284,29 +282,29 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - CapturePayment");
+                _logger.Error(ex, "Reepay - CapturePayment");
             }
 
             return ApiResult.Empty;
         }
 
-        public override ApiResult RefundPayment(OrderReadOnly order, ReepayCheckoutSettings settings)
+        public override async Task<ApiResult> RefundPaymentAsync(PaymentProviderContext<ReepayCheckoutSettings> ctx)
         {
             // Create refund: https://reference.reepay.com/api/#create-refund
 
             try
             {
-                var clientConfig = GetReepayClientConfig(settings);
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
                 var client = new ReepayClient(clientConfig);
 
                 var data = new
                 {
-                    invoice = order.OrderNumber,
-                    amount = AmountToMinorUnits(order.TransactionInfo.AmountAuthorized.Value)
+                    invoice = ctx.Order.OrderNumber,
+                    amount = AmountToMinorUnits(ctx.Order.TransactionInfo.AmountAuthorized.Value)
                 };
 
                 // Refund charge
-                var refund = client.RefundCharge(data);
+                var refund = await client.RefundChargeAsync(data);
 
                 return new ApiResult()
                 {
@@ -319,7 +317,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - RefundPayment");
+                _logger.Error(ex, "Reepay - RefundPayment");
             }
 
             return ApiResult.Empty;
