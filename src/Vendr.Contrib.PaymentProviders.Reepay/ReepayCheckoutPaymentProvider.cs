@@ -189,7 +189,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                     ))
                 {
                     // Get invoice
-                    var invoice = await client.GetInvoice(ctx.Order.OrderNumber);
+                    var invoice = await client.GetInvoice(reepayEvent.Invoice);
                     if (invoice != null)
                     {
                         return CallbackResult.Ok(new TransactionInfo
