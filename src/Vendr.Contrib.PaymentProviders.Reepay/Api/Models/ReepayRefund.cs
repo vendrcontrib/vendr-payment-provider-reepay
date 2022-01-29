@@ -3,6 +3,9 @@ using System;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
+    /// <summary>
+    /// Reepay refund object: https://reference.reepay.com/api/#refund
+    /// </summary>
     public class ReepayRefund
     {
         [JsonProperty("id")]

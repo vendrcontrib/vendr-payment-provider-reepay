@@ -3,6 +3,9 @@ using System;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
+    /// <summary>
+    /// Reepay subscription object: https://reference.reepay.com/api/#subscription
+    /// </summary>
     public class ReepaySubscription
     {
         [JsonProperty("handle")]

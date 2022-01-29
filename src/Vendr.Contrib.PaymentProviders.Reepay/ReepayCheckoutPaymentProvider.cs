@@ -176,16 +176,29 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             {
                 // Process callback
 
+                var clientConfig = GetReepayClientConfig(ctx.Settings);
+                var client = new ReepayClient(clientConfig);
+
                 var reepayEvent = await GetReepayWebhookEventAsync(ctx);
 
-                if (reepayEvent != null && (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || reepayEvent.EventType == WebhookEventType.InvoiceSettled))
+                if (reepayEvent != null && (
+                        reepayEvent.EventType == WebhookEventType.InvoiceAuthorized || 
+                        reepayEvent.EventType == WebhookEventType.InvoiceSettled ||
+                        reepayEvent.EventType == WebhookEventType.InvoiceRefund ||
+                        reepayEvent.EventType == WebhookEventType.InvoiceCancelled
+                    ))
                 {
-                    return CallbackResult.Ok(new TransactionInfo
+                    // Get invoice
+                    var invoice = await client.GetInvoice(ctx.Order.OrderNumber);
+                    if (invoice != null)
                     {
-                        TransactionId = reepayEvent.Transaction,
-                        AmountAuthorized = ctx.Order.TransactionAmount.Value,
-                        PaymentStatus = reepayEvent.EventType == WebhookEventType.InvoiceSettled ? PaymentStatus.Captured : PaymentStatus.Authorized
-                    });
+                        return CallbackResult.Ok(new TransactionInfo
+                        {
+                            TransactionId = reepayEvent.Transaction,
+                            AmountAuthorized = ctx.Order.TransactionAmount.Value,
+                            PaymentStatus = GetPaymentStatus(invoice)
+                        });
+                    }
                 }
             }
             catch (Exception ex)

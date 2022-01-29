@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay.Api.Models
 {
+    /// <summary>
+    /// Reepay customer object: https://reference.reepay.com/api/#customer
+    /// </summary>
     public class ReepayCustomer
     {
         [JsonProperty("email")]

@@ -94,6 +94,12 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                 .ReceiveJson<ReepaySubscription>());
         }
 
+        public async Task<ReepayInvoice> GetInvoice(string handle)
+        {
+            return await Request($"/v1/invoice/{handle}", false, (req) => req
+                .GetJsonAsync<ReepayInvoice>());
+        }
+
         public async Task<Dictionary<string, object>> GetInvoiceMetaData(string handle)
         {
             return await Request($"/v1/invoice/{handle}/metadata", false, (req) => req

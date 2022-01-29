@@ -61,7 +61,9 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) &&
                         (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized ||
-                         reepayEvent.EventType == WebhookEventType.InvoiceSettled))
+                         reepayEvent.EventType == WebhookEventType.InvoiceSettled) ||
+                         reepayEvent.EventType == WebhookEventType.InvoiceRefund ||
+                         reepayEvent.EventType == WebhookEventType.InvoiceCancelled)
                     {
                         var clientConfig = GetReepayClientConfig(ctx.Settings);
                         var client = new ReepayClient(clientConfig);
@@ -82,6 +84,41 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
 
             return await base.GetOrderReferenceAsync(ctx);
+        }
+
+        protected PaymentStatus GetPaymentStatus(ReepayInvoice invoice)
+        {
+            // Possible Invoice statuses:
+            // - created
+            // - pending
+            // - dunning
+            // - authorized
+            // - settled
+            // - failed
+            // - cancelled
+            // - pending
+
+            if (invoice.State == "authorized" || invoice.State == "created")
+                return PaymentStatus.Authorized;
+
+            if (invoice.State == "settled")
+            {
+                if (invoice.RefundedAmount > 0)
+                    return PaymentStatus.Refunded;
+
+                return PaymentStatus.Captured;
+            }
+
+            if (invoice.State == "failed")
+                return PaymentStatus.Error;
+
+            if (invoice.State == "cancelled")
+                return PaymentStatus.Cancelled;
+
+            if (invoice.State == "pending")
+                return PaymentStatus.PendingExternalSystem;
+
+            return PaymentStatus.Initialized;
         }
 
         protected PaymentStatus GetPaymentStatus(ReepayCharge charge)
