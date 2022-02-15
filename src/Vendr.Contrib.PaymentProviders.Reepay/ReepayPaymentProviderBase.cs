@@ -4,61 +4,68 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
+using System.Threading.Tasks;
+using Vendr.Common.Logging;
 using Vendr.Contrib.PaymentProviders.Reepay.Api;
 using Vendr.Contrib.PaymentProviders.Reepay.Api.Models;
-using Vendr.Core;
+using Vendr.Core.Api;
 using Vendr.Core.Models;
-using Vendr.Core.Web.Api;
-using Vendr.Core.Web.PaymentProviders;
+using Vendr.Core.PaymentProviders;
+using Vendr.Extensions;
 
 namespace Vendr.Contrib.PaymentProviders.Reepay
 {
-    public abstract class ReepayPaymentProviderBase<TSettings> : PaymentProviderBase<TSettings>
+    public abstract class ReepayPaymentProviderBase<TSelf, TSettings> : PaymentProviderBase<TSettings>
+        where TSelf : ReepayPaymentProviderBase<TSelf, TSettings>
         where TSettings : ReepaySettingsBase, new()
     {
-        public ReepayPaymentProviderBase(VendrContext vendr)
+        protected readonly ILogger<TSelf> _logger;
+
+        public ReepayPaymentProviderBase(VendrContext vendr,
+            ILogger<TSelf> logger)
             : base(vendr)
-        { }
-
-        public override string GetCancelUrl(OrderReadOnly order, TSettings settings)
         {
-            settings.MustNotBeNull("settings");
-            settings.CancelUrl.MustNotBeNull("settings.CancelUrl");
-
-            return settings.CancelUrl;
+            _logger = logger;
         }
 
-        public override string GetContinueUrl(OrderReadOnly order, TSettings settings)
+        public override string GetCancelUrl(PaymentProviderContext<TSettings> ctx)
         {
-            settings.MustNotBeNull("settings");
-            settings.ContinueUrl.MustNotBeNull("settings.ContinueUrl");
+            ctx.Settings.MustNotBeNull("settings");
+            ctx.Settings.CancelUrl.MustNotBeNull("settings.CancelUrl");
 
-            return settings.ContinueUrl;
+            return ctx.Settings.CancelUrl;
         }
 
-        public override string GetErrorUrl(OrderReadOnly order, TSettings settings)
+        public override string GetContinueUrl(PaymentProviderContext<TSettings> ctx)
         {
-            settings.MustNotBeNull("settings");
-            settings.ErrorUrl.MustNotBeNull("settings.ErrorUrl");
+            ctx.Settings.MustNotBeNull("settings");
+            ctx.Settings.ContinueUrl.MustNotBeNull("settings.ContinueUrl");
 
-            return settings.ErrorUrl;
+            return ctx.Settings.ContinueUrl;
         }
 
-        public override OrderReference GetOrderReference(HttpRequestBase request, TSettings settings)
+        public override string GetErrorUrl(PaymentProviderContext<TSettings> ctx)
+        {
+            ctx.Settings.MustNotBeNull("settings");
+            ctx.Settings.ErrorUrl.MustNotBeNull("settings.ErrorUrl");
+
+            return ctx.Settings.ErrorUrl;
+        }
+
+        public override async Task<OrderReference> GetOrderReferenceAsync(PaymentProviderContext<TSettings> ctx)
         {
             try
             {
-                var reepayEvent = GetReepayWebhookEvent(request, settings);
+                var reepayEvent = await GetReepayWebhookEventAsync(ctx);
                 if (reepayEvent != null)
                 {
                     if (!string.IsNullOrWhiteSpace(reepayEvent.Invoice) &&
                         (reepayEvent.EventType == WebhookEventType.InvoiceAuthorized ||
                          reepayEvent.EventType == WebhookEventType.InvoiceSettled))
                     {
-                        var clientConfig = GetReepayClientConfig(settings);
+                        var clientConfig = GetReepayClientConfig(ctx.Settings);
                         var client = new ReepayClient(clientConfig);
-                        var metadata = client.GetInvoiceMetaData(reepayEvent.Invoice);
+                        var metadata = await client.GetInvoiceMetaData(reepayEvent.Invoice);
                         if (metadata != null)
                         {
                             if (metadata.TryGetValue("orderReference", out object orderReference))
@@ -71,11 +78,10 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             }
             catch (Exception ex)
             {
-                Vendr.Log.Error<ReepayCheckoutPaymentProvider>(ex, "Reepay - GetOrderReference");
-                //Vendr.Log.Error<ReepayPaymentProviderBase<TSettings>>(ex, "Reepay - GetOrderReference");
+                _logger.Error(ex, "Reepay - GetOrderReference");
             }
 
-            return base.GetOrderReference(request, settings);
+            return await base.GetOrderReferenceAsync(ctx);
         }
 
         protected PaymentStatus GetPaymentStatus(ReepayCharge charge)
@@ -151,53 +157,56 @@ namespace Vendr.Contrib.PaymentProviders.Reepay
             };
         }
 
-        protected ReepayWebhookEvent GetReepayWebhookEvent(HttpRequestBase request, ReepaySettingsBase settings)
+        protected async Task<ReepayWebhookEvent> GetReepayWebhookEventAsync(PaymentProviderContext<TSettings> ctx)
         {
             ReepayWebhookEvent reepayEvent = null;
 
-            if (HttpContext.Current.Items["Vendr_ReepayEvent"] != null)
+            if (ctx.AdditionalData.ContainsKey("Vendr_ReepayEvent"))
             {
-                reepayEvent = (ReepayWebhookEvent)HttpContext.Current.Items["Vendr_ReepayEvent"];
+                reepayEvent = (ReepayWebhookEvent)ctx.AdditionalData["Vendr_ReepayEvent"];
             }
             else
             {
                 try
                 {
-                    if (request.InputStream.CanSeek)
-                        request.InputStream.Seek(0, SeekOrigin.Begin);
-
-                    using (var sr = new StreamReader(request.InputStream))
-                    using (var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None })
+                    using (var stream = await ctx.Request.Content.ReadAsStreamAsync())
                     {
-                        while(jr.Read())
+                        if (stream.CanSeek)
+                            stream.Seek(0, SeekOrigin.Begin);
+
+                        using (var sr = new StreamReader(stream))
+                        using (var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None })
                         {
-                            JObject obj = (JObject)JToken.ReadFrom(jr);
-
-                            if (obj != null)
+                            while (jr.Read())
                             {
-                                if (obj.TryGetValue("signature", out JToken signature) &&
-                                    obj.TryGetValue("timestamp", out JToken timestamp) &&
-                                    obj.TryGetValue("id", out JToken id))
+                                JObject obj = (JObject)JToken.ReadFrom(jr);
+
+                                if (obj != null)
                                 {
-                                    // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
-                                    var calcSignature = CalculateSignature(settings.WebhookSecret, timestamp.Value<string>(), id.Value<string>());
-
-                                    if (signature.Value<string>() == calcSignature)
+                                    if (obj.TryGetValue("signature", out JToken signature) &&
+                                        obj.TryGetValue("timestamp", out JToken timestamp) &&
+                                        obj.TryGetValue("id", out JToken id))
                                     {
-                                        var json = obj.ToString(Formatting.None);
+                                        // Validate the webhook signature: https://reference.reepay.com/api/#webhooks
+                                        var calcSignature = CalculateSignature(ctx.Settings.WebhookSecret, timestamp.Value<string>(), id.Value<string>());
 
-                                        reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+                                        if (signature.Value<string>() == calcSignature)
+                                        {
+                                            var json = obj.ToString(Formatting.None);
+
+                                            reepayEvent = JsonConvert.DeserializeObject<ReepayWebhookEvent>(json);
+
+                                            ctx.AdditionalData.Add("Vendr_ReepayEvent", reepayEvent);
+                                        }
                                     }
                                 }
                             }
                         }
-
-                        HttpContext.Current.Items["Vendr_ReepayEvent"] = reepayEvent;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Vendr.Log.Error<ReepayPaymentProviderBase<TSettings>>(ex, "Reepay - GetReepayWebhookEvent");
+                    _logger.Error(ex, "Reepay - GetReepayWebhookEvent");
                 }
             }
 

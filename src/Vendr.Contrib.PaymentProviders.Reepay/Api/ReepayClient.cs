@@ -17,90 +17,90 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
             _config = config;
         }
 
-        public ReepaySessionResponse CreateChargeSession(ReepayChargeSessionRequest data)
+        public async Task<ReepaySessionResponse> CreateChargeSessionAsync(ReepayChargeSessionRequest data)
         {
-            return Request("/v1/session/charge", true, (req) => req
+            return await Request("/v1/session/charge", true, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepaySessionResponse>());
         }
 
-        public ReepaySessionResponse CreateRecurringSession(ReepayChargeSessionRequest data)
+        public async Task<ReepaySessionResponse> CreateRecurringSessionAsync(ReepayChargeSessionRequest data)
         {
-            return Request("/v1/session/recurring", true, (req) => req
+            return await Request("/v1/session/recurring", true, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepaySessionResponse>());
         }
 
-        public ReepayCharge GetCharge(string handle)
+        public async Task<ReepayCharge> GetChargeAsync(string handle)
         {
-            return Request($"/v1/charge/{handle}", false, (req) => req
+            return await Request($"/v1/charge/{handle}", false, (req) => req
                 .GetJsonAsync<ReepayCharge>());
         }
 
-        public ReepayCharge CancelCharge(string handle)
+        public async Task<ReepayCharge> CancelChargeAsync(string handle)
         {
-            return Request($"/v1/charge/{handle}/cancel", false, (req) => req
+            return await Request($"/v1/charge/{handle}/cancel", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostAsync(null)
                 .ReceiveJson<ReepayCharge>());
         }
 
-        public ReepayCharge SettleCharge(string handle, object data)
+        public async Task<ReepayCharge> SettleChargeAsync(string handle, object data)
         {
-            return Request($"/v1/charge/{handle}/settle", false, (req) => req
+            return await Request($"/v1/charge/{handle}/settle", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepayCharge>());
         }
 
-        public ReepayRefund RefundCharge(object data)
+        public async Task<ReepayRefund> RefundChargeAsync(object data)
         {
-            return Request($"/v1/refund", false, (req) => req
+            return await Request($"/v1/refund", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepayRefund>());
         }
 
-        public ReepaySubscription CreateSubscription(object data)
+        public async Task<ReepaySubscription> CreateSubscriptionAsync(object data)
         {
-            return Request($"/v1/subscription", false, (req) => req
+            return await Request($"/v1/subscription", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepaySubscription>());
         }
 
-        public ReepaySubscription GetSubscription(string handle)
+        public async Task<ReepaySubscription> GetSubscriptionAsync(string handle)
         {
-            return Request($"/v1/subscription/{handle}", false, (req) => req
+            return await Request($"/v1/subscription/{handle}", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .GetJsonAsync<ReepaySubscription>());
         }
 
-        public ReepaySubscription CancelSubscription(string handle, object data)
+        public async Task<ReepaySubscription> CancelSubscriptionAsync(string handle, object data)
         {
-            return Request($"/v1/subscription/{handle}/cancel", false, (req) => req
+            return await Request($"/v1/subscription/{handle}/cancel", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(data)
                 .ReceiveJson<ReepaySubscription>());
         }
 
-        public ReepaySubscription UncancelSubscription(string handle)
+        public async Task<ReepaySubscription> UncancelSubscription(string handle)
         {
-            return Request($"/v1/subscription/{handle}/uncancel", false, (req) => req
+            return await Request($"/v1/subscription/{handle}/uncancel", false, (req) => req
                 .WithHeader("Content-Type", "application/json")
                 .PostJsonAsync(null)
                 .ReceiveJson<ReepaySubscription>());
         }
 
-        public Dictionary<string, object> GetInvoiceMetaData(string handle)
+        public async Task<Dictionary<string, object>> GetInvoiceMetaData(string handle)
         {
-            return Request($"/v1/invoice/{handle}/metadata", false, (req) => req
+            return await Request($"/v1/invoice/{handle}/metadata", false, (req) => req
                 .GetJsonAsync<Dictionary<string, object>>());
         }
 
-        private TResult Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)
+        private async Task<TResult> Request<TResult>(string url, bool checkoutApi, Func<IFlurlRequest, Task<TResult>> func)
         {
             var result = default(TResult);
 
@@ -121,7 +121,7 @@ namespace Vendr.Contrib.PaymentProviders.Reepay.Api
                         })
                         .WithHeader("Authorization", _config.Authorization);
 
-                result = func.Invoke(req).Result;
+                result = await func.Invoke(req);
             }
             catch (FlurlHttpException ex)
             {
